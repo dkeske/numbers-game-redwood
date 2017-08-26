@@ -84,7 +84,7 @@ class Group(ContinuousDecisionGroup):
         emitter = DiscreteEventEmitter(.25, self.period_length(), self, self.tick)
         emitter.start()
 
-    def tick(self, current_interval, intervals, group):
+    def tick(self, current_interval, intervals):
         msg = {}
         if self.state == 'results':
             msg = {

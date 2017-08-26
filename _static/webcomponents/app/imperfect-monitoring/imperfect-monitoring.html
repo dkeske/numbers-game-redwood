@@ -3,17 +3,13 @@
 	href="/static/bower_components/polymer/polymer.html" />
 <link
     rel="import"
-    href="/static/otree-redwood/webcomponents/otree-channel/otree-channel.html">
-<link
-    rel="import"
     href="/static/otree-redwood/webcomponents/otree-constants/otree-constants.html">
 <link
     rel="import"
     href="/static/otree-redwood/webcomponents/otree-continuous-decision/otree-continuous-decision.html">
 <link
     rel="import"
-    href="/static/otree-redwood/webcomponents/otree-period/otree-period.html">
-
+    href="/static/otree-redwood/webcomponents/otree-channel/otree-channel.html">
     
 <dom-module id="imperfect-monitoring">
 
@@ -22,7 +18,6 @@
 		<link rel="stylesheet" href="styles.css">
 	
 		<otree-constants id="constants"></otree-constants>
-        <otree-period></otree-period>
         <otree-continuous-decision
             component="imperfect-monitoring"
             my-decision="{{ myDecision }}">
@@ -31,36 +26,42 @@
             channel="tick"
             on-event="_onTick">
         </otree-channel>
+        <otree-channel
+            channel="initialDecisions"
+            on-event="_onInitialDecisions">
+        </otree-channel>
 
-        <div id="experimentContainer">
-            <progress id="myProgress" value="0" hidden$="[[hideProgress]]"></progress>
+        <div id="experiment-container">
+        <progress id="myProgress" value="0"></progress>
 
-            <div class="graph-container">
-                <div id="payoffGraph"></div>
-                <div id="strategyGraph"></div>
-            </div>
+        <div class="graph-container">
+            <div id="payoff_graph"></div>
+            <div id="strategy_graph"></div>
+            <div id="average_A_graph"></div>
+            <div id="average_B_graph"></div>
+        </div>
 
-            <div id="myDecisionContainer">
-                <!--
-                buttons for choosing strategy.
-                -->
-                <button
-                    id="buttonA" 
-    				name="decision"
-    				on-tap="_setMyDecision"
-    				value=1
-    				class$="btn btn-success btn-large [[_buttonAActive(myDecision)]]">
-    				Contribute
-    			</button>
-                <button
-                    id="buttonB"
-    				name="decision"
-    				on-tap="_setMyDecision" 
-    				value=0
-    				class$="btn btn-warning btn-large [[_buttonBActive(myDecision)]]">
-    				Don't Contribute
-    			</button>
-            </div>    
+        <div id="my-decision-container">
+            <!--
+            buttons for choosing strategy.
+            -->
+            <button
+                id="buttonA" 
+				name="decision"
+				on-tap="_setMyDecision"
+				value=1
+				class$="btn btn-success btn-large [[_buttonAActive(myDecision)]]">
+				Contribute
+			</button>
+            <button
+                id="buttonB"
+				name="decision"
+				on-tap="_setMyDecision" 
+				value=0
+				class$="btn btn-warning btn-large [[_buttonBActive(myDecision)]]">
+				Don't Contribute
+			</button>
+        </div>    
         </div>
     
 	</template>
@@ -89,11 +90,6 @@
                 tau: Number,
                 // N milliseconds in the pause between every tau-window
                 pauseTime: Number,
-                // True if the progress bar should be hidden.
-                hideProgress: {
-                    type: Boolean,
-                    value: true,
-                },
 			},
 			ready() {
                 // separate each player's payoffs into two separate arrays
@@ -107,19 +103,19 @@
             attached() {
                 this._setupPayoffGraph();
                 this._setupStrategyGraph();
+                this._setupAverageAGraph();
+                this._setupAverageBGraph();
                 this.draws = [];
-<<<<<<< Updated upstream
-=======
-                this.AverageA = [-1];
-                this.AverageB = [-1];
+                this.AverageA = [];
+                this.AverageB = [];
                 document.getElementById("myProgress").style.visibility = "hidden";
                 pausedDecision = 0.5;
->>>>>>> Stashed changes
 
             },
-            _onTick(event) {
+            _onTick(event){
                 let msg = event.detail.payload;
-                if (msg.realizedPayoffs) {
+               // console.log(msg);
+                if(msg.realizedPayoffs) {
                     this._updateGraph(msg.realizedPayoffs[this.$.constants.participantCode]);
                 }
                 if (msg.updateStrategy) {
@@ -129,8 +125,12 @@
                     this._clearGraph();
                 }
                 if (msg.hasOwnProperty("pauseProgress")) {
-                    this.hideProgress = true;
+                    document.getElementById("myProgress").value = msg.pauseProgress;
                 }
+            },
+            _onInitialDecisions(event){
+                let initialDecisions = event.detail.payload;
+                this.myDecision = initialDecisions[this.$.constants.participantCode];
             },
 			_equals(d, decision) {
 				return d == decision;
@@ -140,15 +140,18 @@
                 var d = parseFloat(event.target.value);
                 this.myDecision = d;
             },
+            // returns a specific entry in the payoff table. I don't really know what's going on here, it's more polymer weirdness
+            _payoff: function (change, x, y) {
+                return change.base[x][y];
+            },
             // sets up payoff over subperiods graph
             _setupPayoffGraph() {
                 // call highcharts setup function
                 this.payoffGraphObj = Highcharts.chart({
                     chart: {
                         animation: false,
-                        renderTo: 'payoffGraph',
+                        renderTo: 'payoff_graph',
                         enabled: false,
-                        width: 300,
                     },
                     title: { text: null },
                     exporting: { enabled: false },
@@ -173,6 +176,7 @@
                         series: {
                             pointPadding: 0,
                             borderWidth: 0,
+                            pointWidth: 20,
                             states: {
                                 hover: {
                                     enabled: false,
@@ -194,8 +198,7 @@
                         {
                             type: "column",
                             data: [],
-                            step: "left",
-                            pointWidth: 20
+                            step: "left"
                         },
                         // average payoff
                            {
@@ -240,10 +243,9 @@
                 this.strategyGraphObj = Highcharts.chart({
                     chart: {
                         animation: false,
-                        renderTo: 'strategyGraph',
+                        renderTo: 'strategy_graph',
                         enabled: false,
-                        reflow: false,
-                        width: 800,
+                        reflow: false
                     },
                     title: { text: null },
                     exporting: { enabled: false },
@@ -256,10 +258,11 @@
                         labels: { enabled: false },
                         scrollbar: { enabled: true },
                         plotLines: [{
+                            zIndex: 5,
                             value: 0,
                             width: 0,
                             color: 'lightgrey',
-                        reversed: true
+                            reversed: true
                         }]
                     },
                     yAxis: {
@@ -297,7 +300,7 @@
                             type: "column",
                             data: [],
                             step: "left",
-                            pointWidth: 16,
+                            pointWidth: 10,
                             pointPlacement: -0.5
                         },
                         // subperiod average payoff
@@ -337,10 +340,157 @@
                     ]
                 });
             },
+            _setupAverageAGraph() {
+                // call highcharts setup function
+                this.averageAGraphObj = Highcharts.chart({
+                    chart: {
+                        animation: false,
+                        renderTo: 'average_A_graph',
+                        enabled: false,
+                    },
+                    title: { text: null },
+                    exporting: { enabled: false },
+                    tooltip: { enabled: false },
+                    legend: { enabled: false },
+                    credits: { enabled: false },
+                    xAxis: {
+                        min: 0,
+                        max: 1,
+                        labels: { enabled: false }
+                    },
+                    yAxis: {
+                        title: { text: undefined },
+                        min: this.myPayoffs[1],
+                        max: this.myPayoffs[2],
+                        labels: { enabled: false },
+                    },
+                    plotOptions: {
+                        column: {
+                        },
+                        line: {marker: {enabled: false}},
+                        series: {
+                            pointPadding: 0,
+                            borderWidth: 0,
+                            pointWidth: 20,
+                            states: {
+                                hover: {
+                                    enabled: false,
+                                }
+                            }
+                       }
+                    },
+                    line: {
+                        marker: {
+                            enabled: false,
+                            states: {
+                                hover: { enabled: false },
+                                select: { enabled: false }
+                            }
+                        }
+                    },
+                    series: [
+                        // strategy average for all Contribute payoffs
+                           {
+                            type: "line",
+                            color: 'black',
+                            lineWidth: 5,
+                            data: [],
+                            step: "left"
+                        },
+                        {
+                            type: "line",
+                            color: 'rgba(0, 100, 0, 0.4)',
+                            lineWidth: 10,
+                            data: [],
+                            step: "left"
+                        },
+                        {
+                            type: "line",
+                            color: 'rgba(0, 100, 0, 0.4)',
+                            lineWidth: 10,
+                            data: [],
+                            step: "left"
+                        }
+                    ]
+                });
+            },
+            _setupAverageBGraph() {
+                // call highcharts setup function
+                this.averageBGraphObj = Highcharts.chart({
+                    chart: {
+                        animation: false,
+                        renderTo: 'average_B_graph',
+                        enabled: false,
+                    },
+                    title: { text: null },
+                    exporting: { enabled: false },
+                    tooltip: { enabled: false },
+                    legend: { enabled: false },
+                    credits: { enabled: false },
+                    xAxis: {
+                        min: 0,
+                        max: 1,
+                        labels: { enabled: false }
+                    },
+                    yAxis: {
+                        title: { text: undefined },
+                        min: this.myPayoffs[1],
+                        max: this.myPayoffs[2],
+                        labels: { enabled: false },
+                    },
+                    plotOptions: {
+                        column: {
+                        },
+                        line: {marker: {enabled: false}},
+                        series: {
+                            pointPadding: 0,
+                            borderWidth: 0,
+                            pointWidth: 20,
+                            states: {
+                                hover: {
+                                    enabled: false,
+                                }
+                            }
+                       }
+                    },
+                    line: {
+                        marker: {
+                            enabled: false,
+                            states: {
+                                hover: { enabled: false },
+                                select: { enabled: false }
+                            }
+                        }
+                    },
+                    series: [
+                        // strategy average for all Don't Contribute payoffs
+                           {
+                            type: "line",
+                            color: 'black',
+                            lineWidth: 5,
+                            data: [],
+                            step: "left"
+                        },
+                        {
+                            type: "line",
+                            color: 'rgba(255, 100, 0, 0.4)',
+                            lineWidth: 10,
+                            data: [],
+                            step: "left"
+                        },
+                        {
+                            type: "line",
+                            color: 'rgba(255, 100, 0, 0.4)',
+                            lineWidth: 10,
+                            data: [],
+                            step: "left"
+                        }
+                    ]
+                });
+            },
             // updates current payoff value every 100 ms
             _updateGraph(realizedPayoff) {
-                this.hideProgress = true;
-
+                document.getElementById("myProgress").style.visibility = "hidden";
                 // if payoff is 0, change it to 1 for the sake of showing a bar on the graph
                 if (realizedPayoff == 0) {
                     realizedPayoff = 1;
@@ -352,8 +502,7 @@
                 dataset.addPoint(realizedPayoff);
             },
             _updateStrategy(pauseTime) {
-                this.hideProgress = false;
-
+                document.getElementById("myProgress").style.visibility = "visible";
                 // calculate payoffs
                 var myPredictedPayoff = [(this.myPayoffs[0]*(1-this.mySignals[0]) + this.myPayoffs[1]*this.mySignals[0]),
                                       (this.myPayoffs[0]*(1-this.mySignals[1]) + this.myPayoffs[1]*this.mySignals[1]),
@@ -366,18 +515,10 @@
                 dataset.addPoint([-1, myAveragePayoff]);
                 dataset.addPoint([6, myAveragePayoff]);
 
-<<<<<<< Updated upstream
-=======
                 if(this.pausedDecision == 1){
-                    if(this.AverageA[0]==-1){
-                        this.AverageA.shift();
-                    }
                     this.AverageA.push(myAveragePayoff);
                 }
                 if(this.pausedDecision == 0){
-                    if(this.AverageB[0]==-1){
-                        this.AverageB.shift();
-                    }
                     this.AverageB.push(myAveragePayoff);
                 }
 
@@ -408,42 +549,43 @@
                 dataset.addPoint([-1, myPredictedPayoff[3]]);
                 dataset.addPoint([2, myPredictedPayoff[3]]);
 
-console.log("A="+ myAverageA, " B="+myAverageB)
+            console.log(myAverageA, myAverageB, "AAAA")
 
->>>>>>> Stashed changes
                 // mark predictions
                 dataset = this.payoffGraphObj.series[2];
-                if (this.myDecision == 1) {
+                if(this.pausedDecision == 1){
                     dataset.addPoint([-1, myPredictedPayoff[0]]);
                     dataset.addPoint([6, myPredictedPayoff[0]]);
                 }
 
                 dataset = this.payoffGraphObj.series[3];
-                if (this.myDecision == 1) {
+                if(this.pausedDecision == 1){
                     dataset.addPoint([-1, myPredictedPayoff[1]]);
                     dataset.addPoint([6, myPredictedPayoff[1]]);
                 }
 
                 dataset = this.payoffGraphObj.series[4];
-                if (this.myDecision == 0) {
+                if(this.pausedDecision == 0){
                     dataset.addPoint([-1, myPredictedPayoff[2]]);
                     dataset.addPoint([6, myPredictedPayoff[2]]);
                 }
 
                 dataset = this.payoffGraphObj.series[5];
-                if (this.myDecision == 0) {
+                if(this.pausedDecision == 0){
                     dataset.addPoint([-1, myPredictedPayoff[3]]);
                     dataset.addPoint([6, myPredictedPayoff[3]]);
                 }
 
                  //add bars to the strategy graph
                 dataset = this.strategyGraphObj.series[0];
-                while (this.draws.length != 0) {
+                while(this.draws.length != 0){
+                //depending on direction its shift or pop
                     dataset.addPoint(this.draws.pop());
+                    console.log(this.strategyGraphObj.series[0].data.length)
                 }
-
+                
                 var xval = dataset.data.length;
-                console.log(xval);
+console.log("AAAAA" + xval);
               
                 // add point for my average payoff
                 dataset = this.strategyGraphObj.series[1];
@@ -451,62 +593,65 @@ console.log("A="+ myAverageA, " B="+myAverageB)
                 dataset.addPoint([xval, myAveragePayoff]);
 
                 dataset = this.strategyGraphObj.series[2];
-                if (this.myDecision == 1) {
-                    dataset.addPoint([xval-6, myPredictedPayoff[0]]);
+                if(this.pausedDecision == 1){
+                    dataset.addPoint([xval-5.5, myPredictedPayoff[0]]);
                     dataset.addPoint([xval, myPredictedPayoff[0]]);
-                } else {
-                    dataset.addPoint([xval-6, null]);
+                }else{
+                    dataset.addPoint([xval-5.5, null]);
                     dataset.addPoint([xval, null]);
                 }
 
                 dataset = this.strategyGraphObj.series[3];
-                if (this.myDecision == 1) {
-                    dataset.addPoint([xval-6, myPredictedPayoff[1]]);
+                if(this.pausedDecision == 1){
+                    dataset.addPoint([xval-5.5, myPredictedPayoff[1]]);
                     dataset.addPoint([xval, myPredictedPayoff[1]]);
-                } else {
-                    dataset.addPoint([xval-6, null]);
+                }else{
+                    dataset.addPoint([xval-5.5, null]);
                     dataset.addPoint([xval, null]);
                 }
 
                 dataset = this.strategyGraphObj.series[4];
-                if (this.myDecision == 0) {
-                    dataset.addPoint([xval-6, myPredictedPayoff[2]]);
+                if(this.pausedDecision == 0){
+                    dataset.addPoint([xval-5.5, myPredictedPayoff[2]]);
                     dataset.addPoint([xval, myPredictedPayoff[2]]);
-                } else {
-                    dataset.addPoint([xval-6, null]);
+                }else{
+                    dataset.addPoint([xval-5.5, null]);
                     dataset.addPoint([xval, null]);
                 }
 
                 dataset = this.strategyGraphObj.series[5];
-                if (this.myDecision == 0) {
-                    dataset.addPoint([xval-6, myPredictedPayoff[3]]);
+                if(this.pausedDecision == 0){
+                    dataset.addPoint([xval-5.5, myPredictedPayoff[3]]);
                     dataset.addPoint([xval, myPredictedPayoff[3]]);
-                } else {
-                    dataset.addPoint([xval-6, null]);
+                }else{
+                    dataset.addPoint([xval-5.5, null]);
                     dataset.addPoint([xval, null]);
                 }
 
                 // add a subperiod line and update scrollbar
                 this.strategyGraphObj.xAxis[0].addPlotLine({
+                    zIndex: 5,
                     value: xval,
-                    width: 6,
-                    color: 'lightgrey'
-                });
-                this.strategyGraphObj.xAxis[0].update({
-                        reversed: true
+                    width: 5,
+                    color: 'grey'
                 });
 
-                if (xval > 35) {
+                if(xval != 0 && xval%30 == 0){
                     this.strategyGraphObj.xAxis[0].update({
                         min: xval-30,
                         max: xval,
                         reversed: true,
                    });
+                }else{
+                    this.strategyGraphObj.xAxis[0].update({
+                        reversed: true
+                    });
                 }
             },
-            _clearGraph() {
+            _clearGraph(){
                 this.payoffGraphObj.destroy();
                 this._setupPayoffGraph();
+                this.pausedDecision = this.myDecision;
             },
             _buttonAActive(myDecision) {
                 return myDecision ? 'active' : '';
