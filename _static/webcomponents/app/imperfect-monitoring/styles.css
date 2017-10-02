@@ -20,6 +20,16 @@
 
 #strategyGraph {
     border: 1px solid black;
+    margin: 0 10px 0 0;
+}
+
+#averageAGraph {
+        border: 1px solid black;
+        margin: 0 10px 0 0;
+}
+
+#averageBGraph {
+        border: 1px solid black;
 }
 
 #myProgress {
