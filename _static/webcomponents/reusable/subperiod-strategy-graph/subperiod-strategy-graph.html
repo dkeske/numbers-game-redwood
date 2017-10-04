@@ -1,9 +1,11 @@
 <link rel="import" href="/static/bower_components/polymer/polymer.html"/>
 
-<link rel="import" href="/static/otree-redwood/webcomponents/redwood-period/redwood-period.html">
+<link
+    rel="import"
+    href="/static/otree-redwood/webcomponents/redwood-channel/redwood-channel.html" />
 
 
-<dom-module id="strategy-graph">
+<dom-module id="subperiod-strategy-graph">
 	<template>
 		<style>
 
@@ -13,10 +15,11 @@
 
 		</style>
 
-        <redwood-period
-	        on-period-start="_handlePeriodStart"
-	        on-period-end="_handlePeriodEnd">
-        </redwood-period>
+    	<redwood-channel
+    		channel="group_decisions"
+    		on-event="_handleGroupDecisionsEvent">
+	    </redwood-channel>
+
 		<div id="chart"></div>
 
 	</template>
@@ -28,17 +31,20 @@
 	
 	<script>
 		Polymer({
-			is: 'strategy-graph',
+			is: 'subperiod-strategy-graph',
 			properties: {
 				myDecision: {
 					type: Number,
-					observer: '_updateDataset'
+					observer: '_endSubperiod'
 				},
 				otherDecision: {
 					type: Number,
-					observer: '_updateDataset'
 				},
 				periodLength: Number,
+				_currSubperiod: {
+					type: Number,
+					value: 0,
+				},
 			},
 			ready() {
 				this.async(this._initHighchart.bind(this), 1);
@@ -72,7 +78,9 @@
 					xAxis: {
 						min: 0,
 						max: 1,
-						labels: { enabled: false },
+						max: this.numSubperiods,
+						tickInterval: 1,
+						labels: { enabled: true },
 						plotLines: [{
 							value: 0,
 							width: 1,
@@ -80,7 +88,7 @@
 							zIndex: 100,
 						},
 						{
-							value: 1,
+							value: this.numSubperiods,
 							width: 1,
 							color: '#ccd6eb',
 							zIndex: 100,
@@ -112,12 +120,14 @@
 					},
 					series: [{
 						name: 'Your Choice',
-						data: [ [0, .5], [0, .5] ],
+						type: "line",
+						data: [[0, 0]],
 						step: "left"
 					},
 					{
 						name: 'Other Choice',
-						data: [ [0, .5], [0, .5] ],
+						type: "line",
+						data: [[0, 0]],
 						step: "left"
 					}],
 					legend: {
@@ -128,54 +138,27 @@
 					},
 				});
 			},
-			_handlePeriodStart() {
-				this.start_time = performance.now();
-				this._animationID = window.requestAnimationFrame(this._updateGraph.bind(this));
-			},
-			_handlePeriodEnd() {
-				window.cancelAnimationFrame(this._animationID);
-			},
-			_updateGraph(timestamp) {
-				// calculate x value for current time
-				const xval = (
-					(timestamp - this.start_time) /
-					(this.periodLength * 1000));
-				if (isNaN(xval)) return;
+			_handleGroupDecisionsEvent(event) {
+				let myDecision;
+				let otherDecision;
+				for (let key in event.detail.payload) {
+					if (key == oTree.participantCode) {
+						myDecision = event.detail.payload[key];
+					} else {
+						otherDecision = event.detail.payload[key];
+					}
+                }
+
+				this._currSubperiod += 1;
 
 				let dataset = this.graph_obj.series[0];
-				this._lastElem(dataset.data).update({x: xval});
+				this._lastElem(dataset.data).update({y: myDecision});
+				dataset.addPoint([this._currSubperiod, myDecision]);
 
 				dataset = this.graph_obj.series[1];
-				this._lastElem(dataset.data).update({x: xval});
-
-				this.graph_obj.redraw();
-
-				// recursively call update
-				this._animationID = window.requestAnimationFrame(this._updateGraph.bind(this));
+				this._lastElem(dataset.data).update({y: otherDecision});
+				dataset.addPoint([this._currSubperiod, otherDecision]);
 			},
-			// is called everytime someone's decision changes to update the graph
-			_updateDataset() {
-				// if graph hasn't been initialized, don't do anything
-				if (!this.graph_obj) return;
-
-				// calculate new decision's timestamp as a value between 0 and 1
-				const xval = (
-					(performance.now() - this.start_time) /
-					(this.periodLength * 1000));
-				if (isNaN(xval)) return;
-
-				// add point for my new decision
-				let dataset = this.graph_obj.series[0];
-				this._lastElem(dataset.data).remove();
-				dataset.addPoint([xval, this.myDecision]);
-				dataset.addPoint([xval, this.myDecision]);
-
-				// add point for others' new decision
-				dataset = this.graph_obj.series[1];
-				this._lastElem(dataset.data).remove();
-				dataset.addPoint([xval, this.otherDecision]);
-				dataset.addPoint([xval, this.otherDecision]);
-			}
 		})
 	</script>
 </dom-module>

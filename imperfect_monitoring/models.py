@@ -4,7 +4,7 @@ from jsonfield import JSONField
 from otree.api import models
 from otree.constants import BaseConstants
 from otree.models import BaseSubsession, BasePlayer
-from otree_redwood.models import Event, ContinuousDecisionGroup
+from otree_redwood.models import Event, DecisionGroup
 from otree_redwood.utils import DiscreteEventEmitter
 import random
 
@@ -20,55 +20,55 @@ class Constants(BaseConstants):
     players_per_group = 2
     num_rounds = 10
 
-    #p1 payoffs
-    p1_A_p2_A_amount = 100
-    p1_A_p2_B_amount = 0
-    p1_B_p2_A_amount = 125
-    p1_B_p2_B_amount = 25
+    treatments = {
+        'A': {
+            'payoff_matrix': [
+                [[100, 100], [0, 0]],
+                [[125, 125], [25, 25]],
+            ],
+            'probability_matrix': [
+                [[0.4, 0.4], [0.6, 0.6]],
+                [[0.6, 0.6], [0.8, 0.8]],
+            ],
+            # [round(max(3, numpy.random.exponential(20))) for i in range(10)] 
+            'num_subperiods': [
+                7,
+                3,
+                29,
+                11,
+                9,
+                6,
+                6,
+                3,
+                6,
+                13,
+            ]
+        }
+    }
 
-    #p2 payoffs
-    p2_A_p1_A_amount = 100
-    p2_A_p1_B_amount = 0
-    p2_B_p1_A_amount = 125
-    p2_B_p1_B_amount = 25
-
-    #p1 signals
-    p1_A_p2_A_signal = .4
-    p1_A_p2_B_signal = .6
-    p1_B_p2_A_signal = .6
-    p1_B_p2_B_signal = .8
-
-    #p2 signals
-    p2_A_p1_A_signal = .4
-    p2_A_p1_B_signal = .6
-    p2_B_p1_A_signal = .6
-    p2_B_p1_B_signal = .8
-
-    base_points = 0
-
-    # Amount of time the game stays on the decision page in seconds.
-    num_subperiods = 10
-    subperiod_length = 12
-
-    # Number of discrete time subperiods in a single period.
- #   num_periods = 10
 
 class Subsession(BaseSubsession):
     def before_session_starts(self):
         self.group_randomly()
 
 
-class Group(ContinuousDecisionGroup):
+class Group(DecisionGroup):
 
     state = models.CharField(max_length=10)
     t = models.PositiveIntegerField()
     fixed_group_decisions = JSONField()
 
-    def initial_decision(self):
-        return 0
-
     def period_length(self):
-        return Constants.num_subperiods * Constants.subperiod_length
+        num_subperiods = self.session.config['num_subperiods']
+        rest_length = self.session.config['rest_length']
+        subperiod_length = self.session.config['subperiod_length']
+        seconds_per_tick = self.session.config['seconds_per_tick']
+        if not num_subperiods:
+            num_subperiods = Constants.treatments[self.session.config['treatment']]['num_subperiods'][self.subsession_id-1]
+        return (
+            num_subperiods *
+            ((subperiod_length + rest_length) * seconds_per_tick)
+        )
 
     def when_all_players_ready(self):
         super().when_all_players_ready()
@@ -77,75 +77,72 @@ class Group(ContinuousDecisionGroup):
         self.t = 0
         self.fixed_group_decisions = {}
         for i, player in enumerate(self.get_players()):
-            self.fixed_group_decisions[player.participant.code] = random.choice([1, 0])
+            self.fixed_group_decisions[player.participant.code] = 0
         self.save()
-        self.send('initialDecisions', self.fixed_group_decisions)
 
-        emitter = DiscreteEventEmitter(.25, self.period_length(), self, self.tick)
+        emitter = DiscreteEventEmitter(
+            self.session.config['seconds_per_tick'], self.period_length(), self, self.tick)
         emitter.start()
 
     def tick(self, current_interval, intervals):
+        # TODO: Integrate into the otree-redwood DiscreteEventEmitter API, because otherwise
+        # someone will forget this and get very confused when the tick functions use stale data.
+        self.refresh_from_db()
         msg = {}
         if self.state == 'results':
             msg = {
                 'realizedPayoffs': self.realized_payoffs(),
-                'fixedDecisions' : self.group_decisions
+                # TODO: We don't really want to send this to the subjects, but we do want it saved
+                # in the event - do we need server-private event fields?
+                'fixedDecisions' : self.fixed_group_decisions
             }
+            self.t += 1
+            if self.t == self.session.config['subperiod_length']:
+                msg['showAverage'] = True
+                msg['showPayoffBars'] = True
+                self.state = 'pause'
+                self.t = 0
         elif self.state == 'pause':
-            if self.t == 6:
-                msg = {
-                    'updateStrategy': True,
-                    'pauseProgress': 1/6.
-                }
-            else:
-                msg = {
-                    'pauseProgress': (self.t-5)/6.
-                }
-                if self.t == 11:
-                    msg['clearGraph'] = True
+            msg = {
+                'pauseProgress': (self.t+1)/self.session.config['rest_length']
+            }
+            self.t += 1
+            if self.t == self.session.config['rest_length']:
+                msg['clearCurrentSubperiod'] = True
+                self.state = 'results'
+                self.t = 0
+                for i, player in enumerate(self.get_players()):
+                    if player.participant.code in self.group_decisions:
+                        self.fixed_group_decisions[player.participant.code] = self.group_decisions[player.participant.code]
         else:
             raise ValueError('invalid state {}'.format(self.state))
 
         self.send('tick', msg)
-
-        self.t += 1
-        if self.t == 6:
-            self.state = 'pause'
-        if self.t == 12:
-            self.state = 'results'
-            self.t = 0
-            self.fixed_group_decisions = dict(self.group_decisions)
         self.save()
 
 
     def realized_payoffs(self):
+
+        payoff_matrix = Constants.treatments[self.session.config['treatment']]['payoff_matrix']
+        probability_matrix = Constants.treatments[self.session.config['treatment']]['probability_matrix']
 
         realized_payoffs = {}
 
         players = self.get_players()
         for i, player in enumerate(players):
 
-            payoffs = None
-            if i == 0:
-                payoffs = [Constants.p1_A_p2_A_amount, Constants.p1_A_p2_B_amount, Constants.p1_B_p2_A_amount, Constants.p1_B_p2_B_amount]
-                signals = [Constants.p1_A_p2_A_signal, Constants.p1_A_p2_B_signal, Constants.p1_B_p2_A_signal, Constants.p1_B_p2_B_signal]
-            else:
-                payoffs = [Constants.p2_A_p1_A_amount, Constants.p2_A_p1_B_amount, Constants.p2_B_p1_A_amount, Constants.p2_B_p1_B_amount]
-                signals = [Constants.p2_A_p1_A_signal, Constants.p2_A_p1_B_signal, Constants.p2_B_p1_A_signal, Constants.p2_B_p1_B_signal]
+            payoffs = [payoff_matrix[0][0][i], payoff_matrix[0][1][i], payoff_matrix[1][0][i], payoff_matrix[1][1][i]]
+            probabilities = [probability_matrix[0][0][i], probability_matrix[0][1][i], probability_matrix[1][0][i], probability_matrix[1][1][i]]
 
             other = players[i-1]
 
-            if self.fixed_group_decisions:
-                my_decision = self.fixed_group_decisions[player.participant.code]
-                other_decision = self.fixed_group_decisions[other.participant.code]
-            else:
-                my_decision = random.choice([0, 1])
-                other_decision = random.choice([0, 1])
+            my_decision = self.fixed_group_decisions[player.participant.code]
+            other_decision = self.fixed_group_decisions[other.participant.code]
 
-            prob = ((my_decision * other_decision * signals[0]) +
-                    (my_decision * (1 - other_decision) * signals[1]) +
-                    ((1 - my_decision) * other_decision * signals[2]) +
-                    ((1 - my_decision) * (1 - other_decision) * signals[3]))
+            prob = ((my_decision * other_decision * probabilities[0]) +
+                    (my_decision * (1 - other_decision) * probabilities[1]) +
+                    ((1 - my_decision) * other_decision * probabilities[2]) +
+                    ((1 - my_decision) * (1 - other_decision) * probabilities[3]))
             payoff_index = 0
             if random.random() <= prob:
                 if my_decision:
@@ -165,18 +162,23 @@ class Group(ContinuousDecisionGroup):
 
 class Player(BasePlayer):
 
+    def initial_decision(self):
+        return 0
+
     def other_player(self):
         return self.get_others_in_group()[0]
 
     def set_payoff(self):
         ticks = Event.objects.filter(
-            channel='ticks',
+            channel='tick',
             content_type=ContentType.objects.get_for_model(self.group),
             group_pk=self.group.pk)
         
-        print(ticks)
-        
         self.payoff = 0
+        total_subperiods = 0
         for tick in ticks:
             if 'realizedPayoffs' in tick.value:
-                self.payoff += tick.value.realizedPayoffs[self.participant.code]
+                self.payoff += tick.value['realizedPayoffs'][self.participant.code]
+                total_subperiods += 1
+        if total_subperiods:
+            self.payoff /= total_subperiods

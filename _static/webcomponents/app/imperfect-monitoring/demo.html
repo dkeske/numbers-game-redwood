@@ -9,10 +9,10 @@
             href="/static/webcomponents/app/imperfect-monitoring/imperfect-monitoring.html">
         <link
             rel="import"
-            href="/static/otree-redwood/webcomponents/otree-redwood-debug/otree-redwood-debug.html">
+            href="/static/otree-redwood/webcomponents/redwood-debug/redwood-debug.html">
     </head>
     <body>
-        <script src="//code.highcharts.com/highcharts.js"></script>
+        <script src="//code.highcharts.com/stock/highstock.js"></script>
         <script src="/static/otree/js/jquery.min.js"></script>
         <script>
             var oTree = oTree || {};
@@ -24,7 +24,7 @@
                 oTree.role = 'demo';
                 oTree.participantCode = 'demo';
                 oTree.appName = "imperfect-monitoring";
-                oTree.idInGroup = 0;
+                oTree.idInGroup = 1;
                 oTree.debug = true;
             })();
         </script>
@@ -44,9 +44,14 @@
                 [0.6, 0.6],
                 [0.8, 0.8]
             ]'
-            player-index='0'
-            period-length='120'>
+            subperiod-length='6'
+            num-subperiods='0'
+            initial-decision='0'
+            display-average-a-graph
+            display-average-b-graph
+            display-average-a-b-graph
+            >
        </imperfect-monitoring>
-       <otree-redwood-debug></otree-redwood-debug>
+       <redwood-debug></redwood-debug>
     </body>
 </html>

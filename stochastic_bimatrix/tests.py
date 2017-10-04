@@ -60,7 +60,7 @@ def test_get_payoff():
     events_over_time.append(MockEvent('decisions', 0.4, p1, start+timezone.timedelta(seconds=18)))
     events_over_time.append(MockEvent('decisions', 0.7, p1, start+timezone.timedelta(seconds=20)))
 
-    period_end = MockEvent('state', 'period_end', p1, start+timezone.timedelta(seconds=models.Constants.period_length))
+    period_end = MockEvent('state', 'period_end', p1, start+timezone.timedelta(seconds=30))
 
     payoff_grids = [
         [
@@ -73,14 +73,17 @@ def test_get_payoff():
         ]
     ]
 
-    payoff1 = models.get_payoff(period_start, period_end, events_over_time, 1, p1.code, payoff_grids)
-    payoff2 = models.get_payoff(period_start, period_end, events_over_time, 2, p2.code, payoff_grids)
+    subsession = models.Subsession.objects.create(session=sess, round_number=1)
+    player1 = models.Player.objects.create(session=sess, subsession=subsession, participant=p1, id_in_group=1)
+    player2 = models.Player.objects.create(session=sess, subsession=subsession, participant=p2, id_in_group=2)
+    group = models.Group.objects.create(session=sess, subsession=subsession)
+    group.player_set = { player1, player2 }
+    player1.group, player2.group = group, group
+
+    payoff1 = player1.get_payoff(period_start, period_end, events_over_time, payoff_grids)
+    payoff2 = player2.get_payoff(period_start, period_end, events_over_time, payoff_grids)
 
     assert 0 <= payoff1 and payoff1 <= 800
     assert 0 <= payoff2 and payoff2 <= 800
-    assert abs(payoff1 - 448) < 1
-    assert abs(payoff2 - 90) < 1
-
-    sess.delete()
-    p1.delete()
-    p2.delete()
+    assert abs(payoff1 - 412) < 1
+    assert abs(payoff2 - 133) < 1

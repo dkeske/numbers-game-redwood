@@ -8,7 +8,7 @@ from otree.db import models
 from otree.constants import BaseConstants
 from otree.common import Currency as c, currency_range
 from otree.models import BaseSubsession, BasePlayer
-from otree_redwood.models import Event, ContinuousDecisionGroup
+from otree_redwood.models import Event, DecisionGroup
 from otree_redwood.utils import DiscreteEventEmitter
 
 doc = """
@@ -80,15 +80,12 @@ class Subsession(BaseSubsession):
         self.group_randomly()
 
 
-class Group(ContinuousDecisionGroup):
+class Group(DecisionGroup):
 
     current_matrix = models.PositiveIntegerField()
     
     def period_length(self):
         return Constants.period_length
-
-    def initial_decision(self):
-        return 0.5
 
     def when_all_players_ready(self):
         super().when_all_players_ready()
@@ -111,7 +108,13 @@ class Group(ContinuousDecisionGroup):
                 p22 * (1 - q1) * (1 - q2)) * Pmax
 
     def tick(self, current_interval, intervals):
-        q1, q2 = list(self.group_decisions.values()) # decisions
+        # TODO: Integrate into the otree-redwood DiscreteEventEmitter API, because otherwise
+        # someone will forget this and get very confused when the tick functions use stale data.
+        self.refresh_from_db()
+        if len(self.group_decisions) != 2:
+            return
+        q1 = self.group_decisions[self.get_player_by_id(1).participant.code]
+        q2 = self.group_decisions[self.get_player_by_id(2).participant.code]
         if random.uniform(0, 1) < self.pswitch(q1, q2):
             self.current_matrix = 1 - self.current_matrix
             self.save()
@@ -119,6 +122,9 @@ class Group(ContinuousDecisionGroup):
 
 
 class Player(BasePlayer):
+
+    def initial_decision(self):
+        return 0.5
 
     def other_player(self):
         return self.get_others_in_group()[0]
@@ -147,50 +153,46 @@ class Player(BasePlayer):
                 group_pk=self.group.pk,
                 value='period_end')
 
-        self.payoff = get_payoff(
+        self.payoff = self.get_payoff(
             period_start, period_end,
             useful_events_over_time,
-            self.id_in_group,
-            self.participant.code,
             Constants.treatments[self.session.config['treatment']]['payoff_grid']
         )
 
+    def get_payoff(self, period_start, period_end, events_over_time, payoff_grids):
 
-def get_payoff(period_start, period_end, events_over_time, id_in_group, participant_code, payoff_grids):
+        period_duration = period_end.timestamp - period_start.timestamp
 
-    period_duration = period_end.timestamp - period_start.timestamp
+        payoff = 0
 
-    payoff = 0
-
-    # defaults
-    q1, q2 = 0.5, 0.5
-    current_matrix = 0
-
-    for i, change in enumerate(events_over_time):
-        if change.channel == 'current_matrix':
-            current_matrix = change.value
-        elif change.channel == 'decisions':
-            # decision was made by me and my id is 1, or decision was made by opponent and my id is 2
-            if (change.participant.code == participant_code) is (id_in_group == 1):
-                q1 = change.value
-            else:
-                q2 = change.value
-
-        payoff_grid = [payoff[id_in_group - 1] for payoff in payoff_grids[current_matrix]]
-
-        cur_payoff = (
-            payoff_grid[0] * q1 * q2 +
-            payoff_grid[1] * q1 * (1 - q2) +
-            payoff_grid[2] * (1 - q1) * q2 +
-            payoff_grid[3] * (1 - q1) * (1 - q2))
-
-        if i + 1 < len(events_over_time):
-            next_change_time = events_over_time[i + 1].timestamp
+        # defaults
+        q1, q2 = 0.5, 0.5
+        current_matrix = 0
+        if self.id_in_group == 1:
+            row_player = self.participant
         else:
-            next_change_time = period_end.timestamp
+            row_player = self.get_others_in_group()[0].participant 
 
-        time_diff = (next_change_time - change.timestamp).total_seconds()
+        for i, change in enumerate(events_over_time):
+            if change.channel == 'current_matrix':
+                current_matrix = change.value
+            elif change.channel == 'decisions':
+                if change.participant == row_player: # row player sets q1
+                    q1 = change.value
+                else: # column player sets q2
+                    q2 = change.value
 
-        payoff += time_diff * cur_payoff
+            flow_payoff = (
+                payoff_grids[current_matrix][0][self.id_in_group - 1] * q1 * q2 +
+                payoff_grids[current_matrix][1][self.id_in_group - 1] * q1 * (1 - q2) +
+                payoff_grids[current_matrix][2][self.id_in_group - 1] * (1 - q1) * q2 +
+                payoff_grids[current_matrix][3][self.id_in_group - 1] * (1 - q1) * (1 - q2))
 
-    return payoff / Constants.period_length
+            if i + 1 < len(events_over_time):
+                next_change_time = events_over_time[i + 1].timestamp
+            else:
+                next_change_time = period_end.timestamp
+
+            payoff += (next_change_time - change.timestamp).total_seconds() * flow_payoff
+
+        return payoff / period_duration.total_seconds() 

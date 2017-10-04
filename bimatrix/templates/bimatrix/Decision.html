@@ -27,16 +27,22 @@
     <script src="//code.highcharts.com/highcharts.js"></script>
 
     <link
-    		rel="import"
-    		href="{% static "webcomponents/app/stochastic-bimatrix/stochastic-bimatrix.html" %}">
+        rel="import"
+        href="{% static "webcomponents/app/leeps-bimatrix/leeps-bimatrix.html" %}">
 {% endblock %}
 
 {% block content %}
-    <stochastic-bimatrix
+    <leeps-bimatrix
         initial-decision='{{ player.initial_decision }}'
-        payoff-matrices='{{ payoff_grid }}'
-        transition-probabilities='{{ transition_probabilities }}'
-        period-length='{{ player.group.period_length }}'>
-    </stochastic-bimatrix>
+        payoff-matrix='{{ player.subsession.payoff_matrix }}'
+        period-length='{{ player.group.period_length }}'
+        {% if player.group.num_subperiods %}
+        num-subperiods='{{ player.group.num_subperiods }}'
+        {% endif %}
+        {% if player.subsession.pure_strategy %}
+        pure-strategy
+        {% endif %}
+        >
+    </leeps-bimatrix>
 
 {% endblock %}

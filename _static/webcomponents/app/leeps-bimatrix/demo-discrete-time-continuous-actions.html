@@ -6,7 +6,7 @@
     </script>
     <link
         rel="import"
-        href="/static/webcomponents/app/stochastic-bimatrix/stochastic-bimatrix.html">
+        href="/static/webcomponents/app/leeps-bimatrix/leeps-bimatrix.html">
     <link
         rel="import"
         href="/static/otree-redwood/webcomponents/redwood-debug/redwood-debug.html">
@@ -24,27 +24,22 @@
             oTree.group = 1;
             oTree.role = 'demo';
             oTree.participantCode = 'demo';
-            oTree.appName = "stochastic-bimatrix";
+            oTree.appName = 'demo';
             oTree.idInGroup = 1;
             oTree.debug = true;
         })();
     </script>
-    <stochastic-bimatrix
-        initial-decision="0.5"
-        payoff-matrices="[[
-            [ 100, 100 ], [   0, 800 ],
-            [ 800,   0 ], [ 300, 300 ]
-        ],
-        [
-            [ 800,   0 ], [   0, 200 ],
-            [   0, 200 ], [ 200,   0 ]
-        ]]"
-        transition-probabilities="[
-            [   1,   0 ], [   0.8,   0 ],
-            [   0,   0 ], [   0.8,   1 ]
-        ]"
-        period-length="120">
-    </stochastic-bimatrix>
-    <redwood-debug></redwood-debug>
+    <div style="margin: 0 10px 0 10px;">
+        <leeps-bimatrix
+            initial-decision="0.5"
+            payoff-matrix="[
+                [ 400, 400 ], [ 0,   800 ],
+                [ 800, 0   ], [ 200, 200 ]
+            ]"
+            period-length="120"
+            num-subperiods="10">
+        </leeps-bimatrix>
+        <redwood-debug></redwood-debug>
+    </div>
   </body>
 </html>

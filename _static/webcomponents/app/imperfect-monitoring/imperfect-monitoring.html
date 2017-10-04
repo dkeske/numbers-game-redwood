@@ -3,58 +3,99 @@
 	href="/static/bower_components/polymer/polymer.html" />
 <link
     rel="import"
-    href="/static/otree-redwood/webcomponents/otree-channel/otree-channel.html">
+    href="/static/otree-redwood/webcomponents/redwood-channel/redwood-channel.html">
 <link
     rel="import"
-    href="/static/otree-redwood/webcomponents/otree-constants/otree-constants.html">
+    href="/static/otree-redwood/webcomponents/redwood-decision/redwood-decision.html">
 <link
     rel="import"
-    href="/static/otree-redwood/webcomponents/otree-continuous-decision/otree-continuous-decision.html">
-<link
-    rel="import"
-    href="/static/otree-redwood/webcomponents/otree-period/otree-period.html">
- 
+    href="/static/otree-redwood/webcomponents/redwood-period/redwood-period.html">
+
 <dom-module id="imperfect-monitoring">
 
 	<template>
 
-		<link rel="stylesheet" href="styles.css">
+        <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
+        <script src="/static/bootstrap/js/bootstrap.min.js"></script>
+        <style>
+            :host {
+                display: flex;
+                flex-direction: column;
+            }
+
+            #progressAndGraphs {
+                display: flex;
+                flex-direction: column;
+                align-self: center;
+            }
+
+            #graphs {
+                display: flex;
+                flex-direction: row;
+                align-self: center;
+            }
+
+            .graph {
+                border: 1px solid black;
+            }
+
+            .graph:not(:last-child) {
+                margin-right: 10px;
+            }
+
+            #progress {
+                margin: 10px 0 10px 0;
+                width: 200px;
+                height: 30px;
+                background: lightgrey;
+                align-self: flex-end;
+            }
+
+            #progress[hidden] {
+                display: inline-block !important;
+                visibility: hidden;
+            }
+
+            #decision {
+                margin-top: 10px;
+                align-self: center;
+            } 
+        </style>
 	
-		<otree-constants id="constants"></otree-constants>
-        <otree-period></otree-period>
-        <otree-continuous-decision
-            component="imperfect-monitoring"
+        <redwood-period></redwood-period>
+        <redwood-decision
+            initial-decision="[[ initialDecision ]]"
             my-decision="{{ myDecision }}">
-        </otree-continuous-decision>
-        <otree-channel
+        </redwood-decision>
+        <redwood-channel
             channel="tick"
             on-event="_onTick">
-        </otree-channel>
-        <otree-channel
-            channel="initialDecisions"
-            on-event="_onInitialDecisions">
-        </otree-channel>
+        </redwood-channel>
 
-        <div id="experimentContainer">
-            <progress id="myProgress" value="0" hidden$="[[hideProgress]]"></progress>
-
-            <div class="graph-container">
-            <div id="payoffGraph"></div>
-            <div id="strategyGraph"></div>
-            <div id="averageAGraph"></div>
-            <div id="averageBGraph"></div>
+        <div id="progressAndGraphs">
+            <progress
+                id="progress"
+                value="[[ pauseProgress ]]"
+                hidden$="[[ hideProgress ]]">
+            </progress>
+            <div id="graphs">
+                <div id="currSubperiodGraph" class="graph"></div>
+                <div id="historyGraph" class="graph"></div>
+                <div id="averageAGraph" class="graph" hidden$="[[ !displayAverageAGraph ]]"></div>
+                <div id="averageBGraph" class="graph" hidden$="[[ !displayAverageBGraph ]]"></div>
+                <div id="averageABGraph" class="graph" hidden$="[[ !displayAverageABGraph ]]"></div>
+            </div>
         </div>
 
-        <div id="myDecisionContainer">
-            <!--
-            buttons for choosing strategy.
-            -->
+        <div id="decision">
             <button
                 id="buttonA" 
 				name="decision"
 				on-tap="_setMyDecision"
 				value=1
-				class$="btn btn-success btn-large [[_buttonAActive(myDecision)]]">
+                type="button"
+                data-toggle="button"
+				class$="btn btn-success btn-large [[ _buttonActive(myDecision, 1) ]]">
 				Contribute
 			</button>
             <button
@@ -62,10 +103,11 @@
 				name="decision"
 				on-tap="_setMyDecision" 
 				value=0
-				class$="btn btn-warning btn-large [[_buttonBActive(myDecision)]]">
+                type="button"
+                data-toggle="button"
+				class$="btn btn-warning btn-large [[ _buttonActive(myDecision, 0) ]]">
 				Don't Contribute
 			</button>
-        </div>    
         </div>
     
 	</template>
@@ -78,11 +120,7 @@
                 payoffMatrix: Array,
                 // 2x2 array of probability based on player's decision.
                 probabilityMatrix: Array,
-                // index describing which entry in payoff matrix is to be used by this player
-                playerIndex: Number,
-                // boolean to choose whether or not to play against a human or robot. 0 is for robot, 1 is for human.
-                alpha: Number,
-                // synced by the otree-continuous-decision component
+                // synced by the redwood-decision component
                 myDecision: Number,
                 // probablility that game continues in any period-- which... I don't really understand what that means
                 delta: Number,
@@ -94,45 +132,220 @@
                 tau: Number,
                 // N milliseconds in the pause between every tau-window
                 pauseTime: Number,
-                  // True if the progress bar should be hidden.
+                // True if the progress bar should be hidden.
                 hideProgress: {
                     type: Boolean,
-                    value: true,
+                    value: false,
+                },
+                aColor: {
+                    type: String,
+                    value: 'rgba(0, 100, 0, 0.4)'
+                },
+                bColor: {
+                    type: String,
+                    value: 'rgba(255, 100, 0, 0.4)'
+                },
+                subperiodLength: {
+                    type: Number,
+                },
+                numSubperiods: {
+                    type: Number,
+                },
+                initialDecision: {
+                    type: Number,
+                },
+                displayAverageAGraph: {
+                    type: Boolean,
+                    value: false,
+                },
+                displayAverageBGraph: {
+                    type: Boolean,
+                    value: false,
+                },
+                displayAverageABGraph: {
+                    type: Boolean,
+                    value: false,
                 },
 			},
 			ready() {
                 // separate each player's payoffs into two separate arrays
                 this.myPayoffs = this.payoffMatrix.map(function (current_val) {
-                    return parseInt(current_val[this.playerIndex]);
+                    return parseInt(current_val[oTree.idInGroup-1]);
                 }, this);
+                this.maxPayoff = Math.max.apply(null, this.myPayoffs);
                 this.mySignals = this.probabilityMatrix.map(function (current_val) {
-                    return parseFloat(current_val[this.playerIndex]);
+                    return parseFloat(current_val[oTree.idInGroup-1]);
                 }, this);
-			},
-            attached() {
-                this._setupPayoffGraph();
-                this._setupStrategyGraph();
-                this._setupAverageAGraph();
-                this._setupAverageBGraph();
-                this.draws = [];
-                this.AverageA = [-1];
-                this.AverageB = [-1];
-                document.getElementById("myProgress").style.visibility = "hidden";
-                this.pausedDecision = 0.5;
 
+                this.myDecision = this.initialDecision;
+                this.averages = [];
+
+                this._setupCurrSubperiodGraph();
+                this._setupHistoryGraph();
+                this.averageAGraph = this._setupAverageGraph(this.$.averageAGraph, [{
+                    type: "line",
+                    color: 'black',
+                    data: [[0, NaN], [1, NaN]],
+                }, {
+                    type: "line",
+                    color: this.aColor,
+                    lineWidth: 10,
+                    data: [[0, this.myPayoffs[0]], [1, this.myPayoffs[0]]],
+                }, {
+                    type: "line",
+                    color: this.aColor,
+                    lineWidth: 10,
+                    data: [[0, this.myPayoffs[1]], [1, this.myPayoffs[1]]],
+                }]);
+                this.averageBGraph = this._setupAverageGraph(this.$.averageBGraph, [{
+                    type: "line",
+                    color: 'black',
+                    data: [[0, NaN], [1, NaN]],
+                }, {
+                    type: "line",
+                    color: this.bColor,
+                    lineWidth: 10,
+                    data: [[0, this.myPayoffs[2]], [1, this.myPayoffs[2]]],
+                }, {
+                    type: "line",
+                    color: this.bColor,
+                    lineWidth: 10,
+                    data: [[0, this.myPayoffs[3]], [1, this.myPayoffs[3]]],
+                }]);
+                this.averageABGraph = this._setupAverageGraph(this.$.averageABGraph, [{
+                    type: "line",
+                    color: 'black',
+                    data: [[0, NaN], [1, NaN]],
+                }, {
+                    type: "line",
+                    color: this.aColor,
+                    lineWidth: 10,
+                    data: [[0, this.myPayoffs[0]], [1, this.myPayoffs[0]]],
+                }, {
+                    type: "line",
+                    color: this.aColor,
+                    lineWidth: 10,
+                    data: [[0, this.myPayoffs[1]], [1, this.myPayoffs[1]]],
+                }, {
+                    type: "line",
+                    color: this.bColor,
+                    lineWidth: 10,
+                    data: [[0, this.myPayoffs[2]], [1, this.myPayoffs[2]]],
+                }, {
+                    type: "line",
+                    color: this.bColor,
+                    lineWidth: 10,
+                    data: [[0, this.myPayoffs[3]], [1, this.myPayoffs[3]]],
+                }]);
             },
             _onTick(event){
                 let msg = event.detail.payload;
+                if (msg.hasOwnProperty('fixedDecisions')) {
+                    this.fixedDecision = msg.fixedDecisions[oTree.participantCode];
+                }
                 if (msg.realizedPayoffs) {
-                    this._updateGraph(msg.realizedPayoffs[this.$.constants.participantCode]);
+                    // Add realized payoffs to the current subperiod graph.
+                    this._addRealizedPayoff(
+                        msg.realizedPayoffs[oTree.participantCode],
+                        this.currSubperiodGraph);
                 }
-                if (msg.updateStrategy) {
-                    this._updateStrategy();
+                if (msg.showAverage) {
+                    const subperiodRealizedPayoffs = this.currSubperiodGraph.series[0].data;
+                    let totalPayoff = 0;
+                    for (let i = 0; i < subperiodRealizedPayoffs.length; i++) {
+                        totalPayoff += subperiodRealizedPayoffs[i].y;
+                    }
+                    const averagePayoff = totalPayoff / subperiodRealizedPayoffs.length;
+                    for (let i = 0; i < subperiodRealizedPayoffs.length; i++) {
+                        this.currSubperiodGraph.series[1].addPoint(averagePayoff);
+                    }
+                    this.averages.push({
+                        decision: this.fixedDecision,
+                        average: averagePayoff,
+                    });
                 }
-                if (msg.clearGraph) {
-                    this._clearGraph();
+                if (msg.showPayoffBars) {
+                    let a, b, color;
+                    if (this.fixedDecision) {
+                        a = this.myPayoffs[0];
+                        b = this.myPayoffs[1];
+                        color = this.aColor;
+                    } else {
+                        a = this.myPayoffs[2];
+                        b = this.myPayoffs[3];
+                        color = this.bColor;
+                    }
+                    this.currSubperiodGraph.addSeries({
+                        type: "line",
+                        color: color,
+                        lineWidth: 10,
+                        data: [[0, a], [this.subperiodLength-1, a]],
+                    });
+                    this.currSubperiodGraph.addSeries({
+                        type: "line",
+                        color: color,
+                        lineWidth: 10,
+                        data: [[0, b], [this.subperiodLength-1, b]],
+                    });
                 }
-                if (msg.hasOwnProperty("pauseProgress")) {
+                if (msg.clearCurrentSubperiod) {
+                    // Add averages to the average charts.
+
+                    const aHistory = this.averages.filter((e) => e.decision == 1);
+                    const bHistory = this.averages.filter((e) => e.decision == 0);
+
+                    let averageA = (
+                        aHistory.reduce((acc, cur) => acc + cur.average, 0) /
+                        aHistory.length);
+                    this.averageAGraph.series[0].setData([[0, averageA], [1, averageA]]);
+
+                    let averageB = (
+                        bHistory.reduce((acc, cur) => acc + cur.average, 0) /
+                        bHistory.length);
+                    this.averageBGraph.series[0].setData([[0, averageB], [1, averageB]]);
+
+                    const average = this.averages.reduce((acc, cur) => acc + cur.average, 0) / this.averages.length;
+                    this.averageABGraph.series[0].setData([[0, average], [1, average]]);
+
+                    // Append the current subperiod graph to the history graph.
+                    const subperiodStart = this.historyGraph.series[0].data.length;
+                    for (let i = 0; i < 2; i++) {
+                        for (let j = 0; j < this.currSubperiodGraph.series[i].data.length; j++) {
+                            this.historyGraph.series[i].addPoint(
+                                this.currSubperiodGraph.series[i].data[j].y);
+                        }
+                    }
+                    // Clear the current subperiod graph.
+                    this.currSubperiodGraph.series[0].setData([]);
+                    this.currSubperiodGraph.series[1].setData([]);
+                    // Removing the series messes with the indexing.
+                    for (let i = 0; i < 2; i++) {
+                        const series = this.currSubperiodGraph.series[2];
+                        const color = series.color;
+                        const data = [];
+                        for (let j = 0; j < series.data.length; j++) {
+                            data.push([subperiodStart + series.data[j].x, series.data[j].y]);
+                        }
+                        series.remove();
+                        this.historyGraph.addSeries({
+                            type: "line",
+                            color: color,
+                            lineWidth: 10,
+                            data: data,
+                        });
+                        const numSubperiods = this.numSubperiods == 0 ? 10 : this.numSubperiods;
+                        const xmax = data[data.length-1][0];
+                        const max = xmax + this.subperiodLength;
+                        const min = max - (numSubperiods * this.subperiodLength) + 1;
+                        if (min > 0) {
+                            this.historyGraph.xAxis[0].setExtremes(min, max);
+                        }
+                    }
+                }
+                if (msg.hasOwnProperty('pauseProgress')) {
+                    this.hideProgress = false;
+                    this.pauseProgress = msg.pauseProgress;
+                } else {
                     this.hideProgress = true;
                 }
             },
@@ -149,13 +362,13 @@
                 var d = parseFloat(event.target.value);
                 this.myDecision = d;
             },
-            // sets up payoff over subperiods graph
-            _setupPayoffGraph() {
+            // sets up current subperiod graph
+            _setupCurrSubperiodGraph() {
                 // call highcharts setup function
-                this.payoffGraphObj = Highcharts.chart({
+                this.currSubperiodGraph = Highcharts.chart({
                     chart: {
                         animation: false,
-                        renderTo: 'payoffGraph',
+                        renderTo: this.$.currSubperiodGraph,
                         enabled: false,
                         width: 150,
                     },
@@ -166,14 +379,18 @@
                     credits: { enabled: false },
                     xAxis: {
                         min: 0,
-                        max: 5,
-                        labels: { enabled: false }
+                        max: this.subperiodLength-1,
+                        labels: { enabled: false },
+                        tickLength: 0,
                     },
                     yAxis: {
                         title: { text: undefined },
-                        min: this.myPayoffs[1],
-                        max: this.myPayoffs[2],
-                        labels: { enabled: false },
+                        min: 0,
+                        max: this.maxPayoff*1.05,
+                        minPadding: 0.05,
+                        maxPadding: 0.05,
+                        endOnTick: false,
+                        labels: { enabled: true },
                     },
                     plotOptions: {
                         column: {
@@ -195,67 +412,28 @@
                             }
                        }
                     },
-                    line: {
-                        marker: {
-                            enabled: false,
-                            states: {
-                                hover: { enabled: false },
-                                select: { enabled: false }
-                            }
-                        }
-                    },
                     series: [
-                        // subperiod payoff
                         {
+                            name: "Realized Payoff",
                             type: "column",
                             data: [],
                             step: "left",
-                            pointWidth: 20
                         },
-                        // average payoff
                            {
+                            name: "Average Payoff",
                             type: "line",
-                            data: [],
-                            step: "left"
-                        },
-                        // predictions
-                        {
-                            type: "line",
-                            color: 'rgba(0, 100, 0, 0.4)',
-                            lineWidth: 10,
-                            data: [],
-                            step: "left"
-                        },
-                        {
-                            type: "line",
-                            color: 'rgba(0, 100, 0, 0.4)',
-                            lineWidth: 10,
-                            data: [],
-                            step: "left"
-                        },
-                        {
-                            type: "line",
-                            color: 'rgba(255, 100, 0, 0.4)',
-                            lineWidth: 10,
-                            data: [],
-                            step: "left"
-                        },
-                        {
-                            type: "line",
-                            color: 'rgba(255, 100, 0, 0.4)',
-                            lineWidth: 10,
                             data: [],
                             step: "left"
                         },
                     ]
                 });
             },
-            _setupStrategyGraph() {
+            _setupHistoryGraph() {
                 // call highcharts setup function
-                this.strategyGraphObj = Highcharts.chart({
+                this.historyGraph = Highcharts.chart({
                     chart: {
                         animation: false,
-                        renderTo: 'strategyGraph',
+                        renderTo: this.$.historyGraph,
                         enabled: false,
                         reflow: false,
                         width: 600
@@ -267,9 +445,11 @@
                     credits: { enabled: false },
                     xAxis: {
                         min: 0,
-                        max: 34,
+                        max: ((this.numSubperiods == 0 ? 10 : this.numSubperiods) *
+                               this.subperiodLength) - 1,
                         labels: { enabled: false },
                         scrollbar: { enabled: true },
+                        tickLength: 0,
                         plotLines: [{
                             zIndex: 5,
                             value: 0,
@@ -280,8 +460,66 @@
                     },
                     yAxis: {
                         title: { text: undefined },
-                        min: this.myPayoffs[1],
-                        max: this.myPayoffs[2],
+                        min: 0,
+                        max: this.maxPayoff*1.05,
+                        minPadding: 0.05,
+                        maxPadding: 0.05,
+                        endOnTick: false,
+                        labels: { enabled: false },
+                    },
+                    plotOptions: {
+                        line: {marker: {enabled: false}},
+                        series: {
+                            states: {
+                                hover: {
+                                    enabled: false,
+                                }
+                            }
+                       }
+                    },
+                    series: [
+                        {
+                            name: "Realized Payoff",
+                            type: "column",
+                            data: [],
+                            pointPadding: 0.01,
+                            pointRange: 1.5,
+                        },
+                        {
+                            name: "Subperiod Average Payoff",
+                            type: "line",
+                            data: [],
+                            step: "left"
+                        },
+                    ]
+                });
+            },
+            _setupAverageGraph(element, series) {
+                return Highcharts.chart({
+                    chart: {
+                        animation: false,
+                        renderTo: element,
+                        enabled: false,
+                        width: 150,
+                    },
+                    title: { text: null },
+                    exporting: { enabled: false },
+                    tooltip: { enabled: false },
+                    legend: { enabled: false },
+                    credits: { enabled: false },
+                    xAxis: {
+                        min: 0,
+                        max: 1,
+                        labels: { enabled: false },
+                        tickLength: 0,
+                    },
+                    yAxis: {
+                        title: { text: undefined },
+                        min: 0,
+                        max: this.maxPayoff*1.05,
+                        minPadding: 0.05,
+                        maxPadding: 0.05,
+                        endOnTick: false,
                         labels: { enabled: false },
                     },
                     plotOptions: {
@@ -295,8 +533,8 @@
                             },
                         linecap: "square",
                         series: {
-                            borderWidth: 0,
                             pointPadding: 0,
+                            borderWidth: 0,
                             states: {
                                 hover: {
                                     enabled: false,
@@ -313,379 +551,26 @@
                             }
                         }
                     },
-                    series: [
-                        // period payoff
-                        {
-                            type: "column",
-                            data: [],
-                            step: "left",
-                            pointWidth: 16,
-                            pointPlacement: -0.5
-                        },
-                        // subperiod average payoff
-                        {
-                            type: "line",
-                            data: [],
-                            step: "left"
-                        },
-                        {
-                            type: "line",
-                            color: 'rgba(0, 100, 0, 0.4)',
-                            lineWidth: 10,
-                            data: [],
-                            step: "left"
-                        },
-                        {
-                            type: "line",
-                            color: 'rgba(0, 100, 0, 0.4)',
-                            lineWidth: 10,
-                            data: [],
-                            step: "left"
-                        },
-                        {
-                            type: "line",
-                            color: 'rgba(255, 100, 0, 0.4)',
-                            lineWidth: 10,
-                            data: [],
-                            step: "left"
-                        },
-                        {
-                            type: "line",
-                            color: 'rgba(255, 100, 0, 0.4)',
-                            lineWidth: 10,
-                            data: [],
-                            step: "left"
-                        },
-                    ]
+                    series: series,
                 });
             },
-            _setupAverageAGraph() {
-                // call highcharts setup function
-                this.averageAGraphObj = Highcharts.chart({
-                    chart: {
-                        animation: false,
-                        renderTo: 'averageAGraph',
-                        enabled: false,
-                        width: 100
-                    },
-                    title: { text: null },
-                    exporting: { enabled: false },
-                    tooltip: { enabled: false },
-                    legend: { enabled: false },
-                    credits: { enabled: false },
-                    xAxis: {
-                        min: 0,
-                        max: 1,
-                        labels: { enabled: false }
-                    },
-                    yAxis: {
-                        title: { text: undefined },
-                        min: this.myPayoffs[1],
-                        max: this.myPayoffs[2],
-                        labels: { enabled: false },
-                    },
-                    plotOptions: {
-                        column: {
-                        },
-                        line: {marker: {enabled: false}},
-                        series: {
-                            pointPadding: 0,
-                            borderWidth: 0,
-                            pointWidth: 20,
-                            states: {
-                                hover: {
-                                    enabled: false,
-                                }
-                            }
-                       }
-                    },
-                    line: {
-                        marker: {
-                            enabled: false,
-                            states: {
-                                hover: { enabled: false },
-                                select: { enabled: false }
-                            },
-                        linecap: "square",
-                        }
-                    },
-                    series: [
-                        // strategy average for all Contribute payoffs
-                           {
-                            type: "line",
-                            color: 'black',
-                            lineWidth: 5,
-                            data: [],
-                            step: "left"
-                        },
-                        {
-                            type: "line",
-                            color: 'rgba(0, 100, 0, 0.4)',
-                            lineWidth: 10,
-                            data: [],
-                            step: "left"
-                        },
-                        {
-                            type: "line",
-                            color: 'rgba(0, 100, 0, 0.4)',
-                            lineWidth: 10,
-                            data: [],
-                            step: "left"
-                        }
-                    ]
-                });
-            },
-            _setupAverageBGraph() {
-                // call highcharts setup function
-                this.averageBGraphObj = Highcharts.chart({
-                    chart: {
-                        animation: false,
-                        renderTo: 'averageBGraph',
-                        enabled: false,
-                        width: 100
-                    },
-                    title: { text: null },
-                    exporting: { enabled: false },
-                    tooltip: { enabled: false },
-                    legend: { enabled: false },
-                    credits: { enabled: false },
-                    xAxis: {
-                        min: 0,
-                        max: 1,
-                        labels: { enabled: false }
-                    },
-                    yAxis: {
-                        title: { text: undefined },
-                        min: this.myPayoffs[1],
-                        max: this.myPayoffs[2],
-                        labels: { enabled: false },
-                    },
-                    plotOptions: {
-                        column: {
-                        },
-                        line: {marker: {enabled: false}},
-                        series: {
-                            pointPadding: 0,
-                            borderWidth: 0,
-                            pointWidth: 20,
-                            states: {
-                                hover: {
-                                    enabled: false,
-                                }
-                            }
-                       }
-                    },
-                    line: {
-                        marker: {
-                            enabled: false,
-                            states: {
-                                hover: { enabled: false },
-                                select: { enabled: false }
-                            }
-                        },
-                        linecap: "square",
-                    },
-                    series: [
-                        // strategy average for all Don't Contribute payoffs
-                           {
-                            type: "line",
-                            color: 'black',
-                            lineWidth: 5,
-                            data: [],
-                            step: "left"
-                        },
-                        {
-                            type: "line",
-                            color: 'rgba(255, 100, 0, 0.4)',
-                            lineWidth: 10,
-                            data: [],
-                            step: "left"
-                        },
-                        {
-                            type: "line",
-                            color: 'rgba(255, 100, 0, 0.4)',
-                            lineWidth: 10,
-                            data: [],
-                            step: "left"
-                        }
-                    ]
-                });
-            },
-            // updates current payoff value every 100 ms
-            _updateGraph(realizedPayoff) {
-                this.hideProgress = true;
-                // if payoff is 0, change it to 1 for the sake of showing a bar on the graph
+            _addRealizedPayoff(realizedPayoff, graph) {
                 if (realizedPayoff == 0) {
                     realizedPayoff = 1;
                 }
-                this.draws.push(realizedPayoff);
-
-                // add a bar per second
-                var dataset = this.payoffGraphObj.series[0];
-                dataset.addPoint(realizedPayoff);
-            },
-            _updateStrategy(pauseTime) {
-                this.hideProgress = false;
-             
-                // calculate payoffs
-                var myPredictedPayoff = [(this.myPayoffs[0]*(1-this.mySignals[0]) + this.myPayoffs[1]*this.mySignals[0]),
-                                      (this.myPayoffs[0]*(1-this.mySignals[1]) + this.myPayoffs[1]*this.mySignals[1]),
-                                      (this.myPayoffs[2]*(1-this.mySignals[2]) + this.myPayoffs[3]*this.mySignals[2]),
-                                      (this.myPayoffs[2]*(1-this.mySignals[3]) + this.myPayoffs[3]*this.mySignals[3])];
-
-                // calculate average
-                var myAveragePayoff = (this.draws.reduce(function(a, b) { return a + b; }, 0))/6;
-                dataset = this.payoffGraphObj.series[1];
-                dataset.addPoint([0, myAveragePayoff]);
-                dataset.addPoint([5, myAveragePayoff]);
-
-                if(this.pausedDecision == 1){
-                    if(this.AverageA[0]==-1){
-                    this.AverageA.shift();
-                    }
-                    this.AverageA.push(myAveragePayoff);
-                }
-                if(this.pausedDecision == 0){
-                    if(this.AverageB[0]==-1){
-                    this.AverageB.shift();
-                    }
-                    this.AverageB.push(myAveragePayoff);
-                }
-
-                // update average graphs
-                var myAverageA = (this.AverageA.reduce(function(a, b) { return a + b; }, 0))/this.AverageA.length;
-                dataset = this.averageAGraphObj.series[0];
-                dataset.addPoint([-1, myAverageA]);
-                dataset.addPoint([2, myAverageA]);
-
-                dataset = this.averageAGraphObj.series[1];
-                dataset.addPoint([0, myPredictedPayoff[0]]);
-                dataset.addPoint([1, myPredictedPayoff[0]]);
-
-                dataset = this.averageAGraphObj.series[2];
-                dataset.addPoint([0, myPredictedPayoff[1]]);
-                dataset.addPoint([1, myPredictedPayoff[1]]);
-
-                var myAverageB = (this.AverageB.reduce(function(a, b) { return a + b; }, 0))/this.AverageB.length;
-                dataset = this.averageBGraphObj.series[0];
-                dataset.addPoint([-1, myAverageB]);
-                dataset.addPoint([2, myAverageB]);
-
-                dataset = this.averageBGraphObj.series[1];
-                dataset.addPoint([0, myPredictedPayoff[2]]);
-                dataset.addPoint([1, myPredictedPayoff[2]]);
-
-                dataset = this.averageBGraphObj.series[2];
-                dataset.addPoint([0, myPredictedPayoff[3]]);
-                dataset.addPoint([1, myPredictedPayoff[3]]);
-
-
-                // mark predictions
-                dataset = this.payoffGraphObj.series[2];
-                if(this.pausedDecision == 1){
-                    dataset.addPoint([0, myPredictedPayoff[0]]);
-                    dataset.addPoint([5, myPredictedPayoff[0]]);
-                }
-
-                dataset = this.payoffGraphObj.series[3];
-                if(this.pausedDecision == 1){
-                    dataset.addPoint([0, myPredictedPayoff[1]]);
-                    dataset.addPoint([5, myPredictedPayoff[1]]);
-                }
-
-                dataset = this.payoffGraphObj.series[4];
-                if(this.pausedDecision == 0){
-                    dataset.addPoint([0, myPredictedPayoff[2]]);
-                    dataset.addPoint([5, myPredictedPayoff[2]]);
-                }
-
-                dataset = this.payoffGraphObj.series[5];
-                if(this.pausedDecision == 0){
-                    dataset.addPoint([0, myPredictedPayoff[3]]);
-                    dataset.addPoint([5, myPredictedPayoff[3]]);
-                }
-
-                 //add bars to the strategy graph
-                dataset = this.strategyGraphObj.series[0];
-                while(this.draws.length != 0){
-                //depending on direction its shift or pop
-                    dataset.addPoint(this.draws.pop());
-                }
-              
-                var xval = dataset.options.data.length;
-              
-                // add point for my average payoff
-                dataset = this.strategyGraphObj.series[1];
-                dataset.addPoint([xval-6, myAveragePayoff]);
-                dataset.addPoint([xval, myAveragePayoff]);
-
-                // mark predictions on strategy graph
-                dataset = this.strategyGraphObj.series[2];
-                if(this.pausedDecision == 1){
-                    dataset.addPoint([xval-6, myPredictedPayoff[0]]);
-                    dataset.addPoint([xval, myPredictedPayoff[0]]);
-                }else{
-                    dataset.addPoint([xval-6, null]);
-                    dataset.addPoint([xval, null]);
-                }
-
-                dataset = this.strategyGraphObj.series[3];
-                if(this.pausedDecision == 1){
-                    dataset.addPoint([xval-6, myPredictedPayoff[1]]);
-                    dataset.addPoint([xval, myPredictedPayoff[1]]);
-                }else{
-                    dataset.addPoint([xval-6, null]);
-                    dataset.addPoint([xval, null]);
-                }
-
-                dataset = this.strategyGraphObj.series[4];
-                if(this.pausedDecision == 0){
-                    dataset.addPoint([xval-6, myPredictedPayoff[2]]);
-                    dataset.addPoint([xval, myPredictedPayoff[2]]);
-                }else{
-                    dataset.addPoint([xval-6, null]);
-                    dataset.addPoint([xval, null]);
-                }
-
-                dataset = this.strategyGraphObj.series[5];
-                if(this.pausedDecision == 0){
-                    dataset.addPoint([xval-6, myPredictedPayoff[3]]);
-                    dataset.addPoint([xval, myPredictedPayoff[3]]);
-                }else{
-                    dataset.addPoint([xval-6, null]);
-                    dataset.addPoint([xval, null]);
-                }
-
-                // add a subperiod line and update scrollbar
-                this.strategyGraphObj.xAxis[0].addPlotLine({
-                    zIndex: 5,
-                    value: xval,
-                    width: 5,
-                    color: 'grey'
-                });
-
-                if(xval > 35){
-                    this.strategyGraphObj.xAxis[0].update({
-                        min: xval-30,
-                        max: xval,
-                        reversed: true
-                    });
-                }else{
-                    this.strategyGraphObj.xAxis[0].update({
-                        reversed: true,
-                    });
+                const data = graph.series[0].data;
+                if (data.length == 0) {
+                    graph.series[0].addPoint([data.length, realizedPayoff]);
+                    graph.series[0].addPoint([data.length, undefined]);
+                } else if (data.length === 2 && data[1].y === undefined) {
+                    data[1].y = realizedPayoff;
+                    graph.series[0].setData(data);
+                } else {
+                    graph.series[0].addPoint([data.length, realizedPayoff]);
                 }
             },
-            _clearGraph(){
-                this.payoffGraphObj.destroy();
-                this._setupPayoffGraph();
-                this.pausedDecision = this.myDecision;
-            },
-            _buttonAActive(myDecision) {
-                return myDecision ? 'active' : '';
-            },
-            _buttonBActive(myDecision) {
-                return myDecision ? '' : 'active';
+            _buttonActive(myDecision, buttonIndex) {
+                return myDecision == buttonIndex ? 'active' : '';
             },
         });
     </script>

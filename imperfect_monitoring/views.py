@@ -5,30 +5,10 @@ from .models import Constants
 
 
 def vars_for_all_templates(self):
-    if (self.player.id_in_group == 1):
-        return {
-            "my_A_A_payoff": Constants.p1_A_p2_A_amount,
-            "my_A_B_payoff": Constants.p1_A_p2_B_amount,
-            "my_B_A_payoff": Constants.p1_B_p2_A_amount,
-            "my_B_B_payoff": Constants.p1_B_p2_B_amount,
-            "other_A_A_payoff": Constants.p2_A_p1_A_amount,
-            "other_A_B_payoff": Constants.p2_A_p1_B_amount,
-            "other_B_A_payoff": Constants.p2_B_p1_A_amount,
-            "other_B_B_payoff": Constants.p2_B_p1_B_amount,
-            "total_q": 1
-        }
-    else:
-        return {
-            "my_A_A_payoff": Constants.p2_A_p1_A_amount,
-            "my_A_B_payoff": Constants.p2_A_p1_B_amount,
-            "my_B_A_payoff": Constants.p2_B_p1_A_amount,
-            "my_B_B_payoff": Constants.p2_B_p1_B_amount,
-            "other_A_A_payoff": Constants.p1_A_p2_A_amount,
-            "other_A_B_payoff": Constants.p1_A_p2_B_amount,
-            "other_B_A_payoff": Constants.p1_B_p2_A_amount,
-            "other_B_B_payoff": Constants.p1_B_p2_B_amount,
-            "total_q": 1
-        }
+    return {
+        "payoff_matrix": Constants.treatments[self.session.config['treatment']]['payoff_matrix'],
+        "probability_matrix": Constants.treatments[self.session.config['treatment']]['probability_matrix'],
+    }
 
 
 class Introduction(Page):
@@ -43,17 +23,16 @@ class DecisionWaitPage(WaitPage):
 
 
 class Decision(Page):
-    pass
+
+    def vars_for_template(self):
+        return {}
 
 
 class Results(Page):
 
     def vars_for_template(self):
         self.player.set_payoff()
-
-        return {
-            'total_plus_base': self.player.payoff + Constants.base_points
-        }
+        return {}
 
 
 def get_output_table(events):

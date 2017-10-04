@@ -146,31 +146,22 @@ SESSION_CONFIGS = [
         'display_name': "Imperfect Monitoring",
         'num_demo_participants': 2,
         'app_sequence': ['imperfect_monitoring', 'payment_info'],
+        'treatment': 'A',
+        'num_subperiods': 0,
+        'subperiod_length': 6,
+        'rest_length': 6,
+        'seconds_per_tick': 1,
+        'display_average_a_graph': True,
+        'display_average_b_graph': True,
+        'display_average_ab_graph': False,
     },
-    #{
-    #    'name': 'full_bimatrix',
-    #    'display_name': "Continuous and Discrete Bimatrix Game",
-    #    'num_demo_participants': 2,
-    #    'app_sequence': ['continuous_bimatrix', 'discrete_bimatrix', 'payment_info'],
-    #},
-    #{
-    #    'name': 'discrete_bimatrix',
-    #    'display_name': "Discrete Bimatrix Game",
-    #    'num_demo_participants': 2,
-    #    'app_sequence': ['discrete_bimatrix', 'payment_info'],
-    #},
     {
-        'name': 'continuous_bimatrix',
-        'display_name': "Continuous Bimatrix Game",
+        'name': 'bimatrix',
+        'display_name': "Generic Bimatrix Game",
         'num_demo_participants': 2,
-        'app_sequence': ['continuous_bimatrix', 'payment_info'],
+        'app_sequence': ['bimatrix', 'payment_info'],
+        'config_file': 'demo.csv',
     },
-    #{
-    #    'name': 'discrete_time_example',
-    #    'display_name': "Discrete Time Example Game",
-    #    'num_demo_participants': 2,
-    #    'app_sequence': ['discrete_time_example', 'payment_info'],
-    #},
     {
         'name': 'stochastic_bimatrix',
         'display_name': "Stochastic Bimatrix Game",
@@ -178,174 +169,6 @@ SESSION_CONFIGS = [
         'app_sequence': ['stochastic_bimatrix', 'payment_info'],
         'treatment': 'A'
     },
-    {
-        'name': 'public_goods',
-        'display_name': "Public Goods",
-        'num_demo_participants': 3,
-        'app_sequence': ['public_goods', 'payment_info'],
-    },
-    {
-        'name': 'trust',
-        'display_name': "Trust Game",
-        'num_demo_participants': 2,
-        'app_sequence': ['trust', 'payment_info'],
-    },
-    {
-        'name': 'guess_two_thirds',
-        'display_name': "Guess 2/3 of the Average",
-        'num_demo_participants': 3,
-        'app_sequence': ['guess_two_thirds', 'payment_info'],
-    },
-    {
-        'name': 'survey',
-        'display_name': "Survey",
-        'num_demo_participants': 1,
-        'app_sequence': ['survey', 'payment_info'],
-    },
-    {
-        'name': 'quiz',
-        'display_name': "Quiz",
-        'num_demo_participants': 1,
-        'app_sequence': ['quiz'],
-    },
-    {
-        'name': 'prisoner',
-        'display_name': "Prisoner's Dilemma",
-        'num_demo_participants': 2,
-        'app_sequence': ['prisoner', 'payment_info'],
-    },
-    {
-        'name': 'ultimatum',
-        'display_name': "Ultimatum (randomized: strategy vs. direct response)",
-        'num_demo_participants': 2,
-        'app_sequence': ['ultimatum', 'payment_info'],
-    },
-    {
-        'name': 'ultimatum_strategy',
-        'display_name': "Ultimatum (strategy method treatment)",
-        'num_demo_participants': 2,
-        'app_sequence': ['ultimatum', 'payment_info'],
-        'treatment': 'strategy',
-    },
-    {
-        'name': 'ultimatum_non_strategy',
-        'display_name': "Ultimatum (direct response treatment)",
-        'num_demo_participants': 2,
-        'app_sequence': ['ultimatum', 'payment_info'],
-        'treatment': 'direct_response',
-    },
-    {
-        'name': 'vickrey_auction',
-        'display_name': "Vickrey Auction",
-        'num_demo_participants': 3,
-        'app_sequence': ['vickrey_auction', 'payment_info'],
-    },
-    {
-        'name': 'volunteer_dilemma',
-        'display_name': "Volunteer's Dilemma",
-        'num_demo_participants': 3,
-        'app_sequence': ['volunteer_dilemma', 'payment_info'],
-    },
-    {
-        'name': 'cournot',
-        'display_name': "Cournot Competition",
-        'num_demo_participants': 2,
-        'app_sequence': [
-            'cournot', 'payment_info'
-        ],
-    },
-    {
-        'name': 'principal_agent',
-        'display_name': "Principal Agent",
-        'num_demo_participants': 2,
-        'app_sequence': ['principal_agent', 'payment_info'],
-    },
-    {
-        'name': 'dictator',
-        'display_name': "Dictator Game",
-        'num_demo_participants': 2,
-        'app_sequence': ['dictator', 'payment_info'],
-    },
-    {
-        'name': 'matching_pennies',
-        'display_name': "Matching Pennies",
-        'num_demo_participants': 2,
-        'app_sequence': [
-            'matching_pennies',
-        ],
-    },
-    {
-        'name': 'traveler_dilemma',
-        'display_name': "Traveler's Dilemma",
-        'num_demo_participants': 2,
-        'app_sequence': ['traveler_dilemma', 'payment_info'],
-    },
-    {
-        'name': 'bargaining',
-        'display_name': "Bargaining Game",
-        'num_demo_participants': 2,
-        'app_sequence': ['bargaining', 'payment_info'],
-    },
-    {
-        'name': 'common_value_auction',
-        'display_name': "Common Value Auction",
-        'num_demo_participants': 3,
-        'app_sequence': ['common_value_auction', 'payment_info'],
-    },
-    {
-        'name': 'stackelberg',
-        'display_name': "Stackelberg Competition",
-        'real_world_currency_per_point': 0.01,
-        'num_demo_participants': 2,
-        'app_sequence': [
-            'stackelberg', 'payment_info'
-        ],
-    },
-    {
-        'name': 'bertrand',
-        'display_name': "Bertrand Competition",
-        'num_demo_participants': 2,
-        'app_sequence': [
-            'bertrand', 'payment_info'
-        ],
-    },
-    {
-        'name': 'real_effort',
-        'display_name': "Real-effort transcription task",
-        'num_demo_participants': 1,
-        'app_sequence': [
-            'real_effort',
-        ],
-    },
-    {
-        'name': 'lemon_market',
-        'display_name': "Lemon Market Game",
-        'num_demo_participants': 3,
-        'app_sequence': [
-            'lemon_market', 'payment_info'
-        ],
-    },
-    {
-        'name': 'battle_of_the_sexes',
-        'display_name': "Battle of the Sexes",
-        'num_demo_participants': 2,
-        'app_sequence': [
-            'battle_of_the_sexes', 'payment_info'
-        ],
-    },
-    {
-        'name': 'public_goods_simple',
-        'display_name': "Public Goods (simple version from tutorial)",
-        'num_demo_participants': 3,
-        'app_sequence': ['public_goods_simple', 'survey', 'payment_info'],
-    },
-    {
-        'name': 'trust_simple',
-        'display_name': "Trust Game (simple version from tutorial)",
-        'num_demo_participants': 2,
-        'app_sequence': ['trust_simple'],
-    },
-
 ]
 
 # anything you put after the below line will override

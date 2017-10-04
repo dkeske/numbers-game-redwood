@@ -16,12 +16,13 @@
 		</style>
 
 		<input
+            id="input"
 		    type="range"
 		    min="[[ min ]]"
 		    max="[[ max ]]"
 		    step="[[ step ]]"
 		    disabled$="[[ disabled ]]"
-            on-change="_valueChanged">
+            on-change="_inputValueChanged">
     </template>
 
     <script>
@@ -43,10 +44,14 @@
             	value: {
                     type: Number,
             		notify: true,
+                    observer: '_parentValueChanged',
             	},
             },
-            _valueChanged(event) {
+            _inputValueChanged(event) {
                 this.value = parseFloat(event.target.value);
+            },
+            _parentValueChanged(newValue, oldValue) {
+                this.$.input.value = newValue;
             },
         })
     </script>
