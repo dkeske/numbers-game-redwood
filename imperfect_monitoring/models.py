@@ -59,12 +59,10 @@ class Group(DecisionGroup):
     fixed_group_decisions = JSONField()
 
     def period_length(self):
-        num_subperiods = self.session.config['num_subperiods']
+        num_subperiods = Constants.treatments[self.session.config['treatment']]['num_subperiods'][self.round_number-1]
         rest_length = self.session.config['rest_length']
         subperiod_length = self.session.config['subperiod_length']
         seconds_per_tick = self.session.config['seconds_per_tick']
-        if not num_subperiods:
-            num_subperiods = Constants.treatments[self.session.config['treatment']]['num_subperiods'][self.subsession_id-1]
         return (
             num_subperiods *
             ((subperiod_length + rest_length) * seconds_per_tick)

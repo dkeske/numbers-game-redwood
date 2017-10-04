@@ -147,7 +147,7 @@ SESSION_CONFIGS = [
         'num_demo_participants': 2,
         'app_sequence': ['imperfect_monitoring', 'payment_info'],
         'treatment': 'A',
-        'num_subperiods': 0,
+        'displayed_subperiods': 10,
         'subperiod_length': 6,
         'rest_length': 6,
         'seconds_per_tick': 1,

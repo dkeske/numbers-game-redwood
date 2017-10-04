@@ -25,7 +25,12 @@ class DecisionWaitPage(WaitPage):
 class Decision(Page):
 
     def vars_for_template(self):
-        return {}
+        displayed_subperiods = self.session.config['displayed_subperiods'] 
+        if displayed_subperiods == 0:
+            displayed_subperiods = Constants.treatments[self.session.config['treatment']]['num_subperiods'][self.round_number-1]
+        return {
+            'displayed_subperiods': displayed_subperiods
+        }
 
 
 class Results(Page):
