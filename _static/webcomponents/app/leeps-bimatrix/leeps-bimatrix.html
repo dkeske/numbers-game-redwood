@@ -48,6 +48,10 @@
                 width: 50%;
             }
 
+            .your-payoff {
+                font-weight: bold;
+            }
+
             paper-radio-group {
                 height: 300px;
             }
@@ -145,21 +149,29 @@
                             <table id="payoff-table" class="self-center">
                                 <tr>
                                     <td class$="[[ _payoffMatrixClass(myPlannedDecision, otherDecision, 1, 1) ]]">
-                                        <span>[[ _array(myPayoffs, 0) ]]</span>,
+                                        <span class="your-payoff">
+                                            [[ _array(myPayoffs, 0) ]]
+                                        </span>,
                                         <span>[[ _array(otherPayoffs, 0) ]]</span>
                                     </td>
                                     <td class$="[[ _payoffMatrixClass(myPlannedDecision, otherDecision, 1, 0) ]]">
-                                        <span>[[ _array(myPayoffs, 1) ]]</span>,
+                                        <span class="your-payoff">
+                                            [[ _array(myPayoffs, 1) ]]
+                                        </span>,
                                         <span>[[ _array(otherPayoffs, 1) ]]</span>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class$="[[ _payoffMatrixClass(myPlannedDecision, otherDecision, 0, 1) ]]">
-                                        <span>[[ _array(myPayoffs, 2) ]]</span>,
+                                        <span class="your-payoff">
+                                            [[ _array(myPayoffs, 2) ]]
+                                        </span>,
                                         <span>[[ _array(otherPayoffs, 2) ]]</span>
                                     </td>
                                     <td class$="[[ _payoffMatrixClass(myPlannedDecision, otherDecision, 0, 0) ]]">
-                                        <span>[[ _array(myPayoffs, 3) ]]</span>,
+                                        <span class="your-payoff">
+                                            [[ _array(myPayoffs, 3) ]]
+                                        </span>,
                                         <span>[[ _array(otherPayoffs, 3) ]]</span>
                                     </td>
                                 </tr>
