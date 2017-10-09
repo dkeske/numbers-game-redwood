@@ -8,9 +8,10 @@ class PlayerBot(Bot):
     def play_round(self):
         if self.player.round_number == 1:
             yield views.Introduction
-        test_get_payoff()
-        yield Submission(views.Decision, {}, check_html=False)
-        yield views.Results
+        if self.player.round_number <= self.group.num_rounds():
+            test_get_payoff()
+            yield Submission(views.Decision, {}, check_html=False)
+            yield views.Results
 
 
     def validate_play(self):

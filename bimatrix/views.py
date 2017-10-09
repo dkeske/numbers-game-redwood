@@ -12,9 +12,14 @@ class Introduction(Page):
 class DecisionWaitPage(WaitPage):
     body_text = 'Waiting for all players to be ready'
 
+    def is_displayed(self):
+        return self.round_number <= self.group.num_rounds()
+
 
 class Decision(Page):
-    pass
+
+    def is_displayed(self):
+        return self.round_number <= self.group.num_rounds()
     
 
 class Results(Page):
@@ -23,6 +28,9 @@ class Results(Page):
     def vars_for_template(self):
         self.player.set_payoff()
         return {}
+
+    def is_displayed(self):
+        return self.round_number <= self.group.num_rounds()
 
 
 def get_output_table(events):
