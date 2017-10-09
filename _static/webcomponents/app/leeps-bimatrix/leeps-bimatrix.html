@@ -236,6 +236,8 @@
                                         my-decision="[[ myPlannedDecision ]]"
                                         other-decision="[[ otherDecision ]]"
                                         period-length="[[ periodLength ]]"
+                                        my-choice-series="[[ myChoiceSeries ]]"
+                                        other-choice-series="[[ otherChoiceSeries ]]"
                                     ></strategy-graph>
                                     <payoff-graph
                                         my-decision="[[ myPlannedDecision ]]"
@@ -243,6 +245,8 @@
                                         my-payoffs="[[ myPayoffs ]]"
                                         other-payoffs="[[ otherPayoffs ]]"
                                         period-length="[[ periodLength ]]"
+                                        my-payoff-series="[[ myPayoffSeries ]]"
+                                        other-payoff-series="[[ otherPayoffSeries ]]"
                                     ></payoff-graph>
                                 </template>
                                 <template is="dom-if" if="[[ numSubperiods ]]">
@@ -295,6 +299,30 @@
                 pureStrategy: {
                     type: Boolean,
                     value: false
+                },
+                myChoiceSeries: {
+                    type: Array,
+                    value: () => {
+                        return [[0, 0], [Number.EPSILON, 0]];
+                    }
+                },
+                otherChoiceSeries: {
+                    type: Array,
+                    value: () => {
+                        return [[0, 0], [Number.EPSILON, 0]];
+                    }
+                },
+                myPayoffSeries: {
+                    type: Array,
+                    value: () => {
+                        return [[0, 0], [Number.EPSILON, 0]];
+                    }
+                },
+                otherPayoffSeries: {
+                    type: Array,
+                    value: () => {
+                        return [[0, 0], [Number.EPSILON, 0]];
+                    }
                 },
                 // set by redwood-period
                 _isPeriodRunning: {

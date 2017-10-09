@@ -38,6 +38,18 @@
 					type: Number,
 					observer: '_updateDataset'
 				},
+				myChoiceSeries: {
+					type: Array,
+					value: () => {
+						return [[0, 0], [Number.EPSILON, 0]];
+					}
+				},
+				otherChoiceSeries: {
+					type: Array,
+					value: () => {
+						return [[0, 0], [Number.EPSILON, 0]];
+					}
+				},
 				periodLength: Number,
 			},
 			ready() {
@@ -112,12 +124,12 @@
 					},
 					series: [{
 						name: 'Your Choice',
-						data: [ [0, .5], [0, .5] ],
+						data: this.myChoiceSeries,
 						step: "left"
 					},
 					{
 						name: 'Other Choice',
-						data: [ [0, .5], [0, .5] ],
+						data: this.otherChoiceSeries,
 						step: "left"
 					}],
 					legend: {

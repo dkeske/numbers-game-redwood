@@ -37,8 +37,19 @@
                 [ 800, 0   ], [ 200, 200 ]
             ]"
             period-length="120"
-            pure-strategy>
+            pure-strategy
+            my-decision="0"
+            other-decision="1"
+            my-payoff-series="[
+                [0, 200],
+                [0.2, 100],
+                [0.5, 50]
+            ]">
         </leeps-bimatrix>
+        <script>
+            document.querySelector('leeps-bimatrix').otherDecision = 1;
+            document.querySelector('leeps-bimatrix')._myPlannedDecisionString = "0";
+        </script>
         <redwood-debug></redwood-debug>
     </div>
   </body>
