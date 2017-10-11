@@ -35,6 +35,9 @@
         currency="{{ player.currency }}"
         units="{{ player.units }}"
         value="{{ player.value }}"
-        cost="{{ player.cost }}">
+        cost="{{ player.cost }}"
+        bids='{{ player.group.bid_queue|json }}'
+        asks='{{ player.group.ask_queue|json }}'
+        trades='{{ player.group.trades|json }}'>
     </continuous-double-auction>
 {% endblock %}

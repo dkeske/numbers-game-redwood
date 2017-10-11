@@ -49,6 +49,11 @@ class Group(RedwoodGroup):
         seller.units -= 1
         buyer.save()
         seller.save()
+        self.send('trades', {
+            'price': price,
+            'buyer': buyer.participant.code,
+            'seller': seller.participant.code, 
+        })
 
     def remove_bid(self, buyer=None):
         found = None
@@ -57,6 +62,7 @@ class Group(RedwoodGroup):
                 found = i
         if found is not None:
             self.bid_queue.pop(found)
+        return found != None
 
     def remove_ask(self, seller=None):
         found = None
@@ -65,8 +71,9 @@ class Group(RedwoodGroup):
                 found = i
         if found is not None:
             self.ask_queue.pop(found)
+        return found != None
 
-    def _on_market_event(self, event):
+    def _on_orders_event(self, event):
         if not self.bid_queue:
             self.bid_queue = []
         if not self.ask_queue:
@@ -75,16 +82,20 @@ class Group(RedwoodGroup):
         player = self.get_player(event.participant.code)
         role = player.role()
 
+        bid_queue_changed = False
+        ask_queue_changed = False
+
         if event.value['type'] == 'bid':
             if role != 'buyer':
                 return
             if event.value['price'] > player.currency:
                 return
 
-            self.remove_bid(buyer=player)
+            bid_queue_changed |= self.remove_bid(buyer=player)
 
             if self.ask_queue and event.value['price'] >= self.ask_queue[0]['price']:
                 ask = self.ask_queue.pop(0)
+                ask_queue_changed = True
                 self.trade(
                     buyer=player,
                     seller=self.get_player(ask['pcode']),
@@ -98,6 +109,7 @@ class Group(RedwoodGroup):
                     self.bid_queue,
                     key=lambda bid: bid['price'],
                     reverse=True)
+                bid_queue_changed = True
 
         if event.value['type'] == 'ask':
             if role != 'seller':
@@ -105,10 +117,11 @@ class Group(RedwoodGroup):
             if player.units <= 0:
                 return
 
-            self.remove_ask(seller=player)
+            ask_queue_changed |= self.remove_ask(seller=player)
 
             if self.bid_queue and event.value['price'] <= self.bid_queue[0]['price']:
                 bid = self.bid_queue.pop(0)
+                bid_queue_changed = True
                 self.trade(
                     buyer=self.get_player(bid['pcode']),
                     seller=player,
@@ -121,18 +134,21 @@ class Group(RedwoodGroup):
                 self.ask_queue = sorted(
                     self.ask_queue,
                     key=lambda ask: ask['price'])
+                ask_queue_changed = True
 
         if event.value['type'] == 'remove':
             if role == 'buyer':
-                self.remove_bid(buyer=player)
+                bid_queue_changed |= self.remove_bid(buyer=player)
             else:
-                self.remove_ask(seller=player)
+                ask_queue_changed |= self.remove_ask(seller=player)
 
         if event.value['type'] == 'buy':
             if role != 'buyer':
                 return
             if self.ask_queue and player.currency >= self.ask_queue[0]['price']:
+                bid_queue_changed |= self.remove_bid(buyer=player)
                 ask = self.ask_queue.pop(0)
+                ask_queue_changed = True
                 self.trade(
                     buyer=player,
                     seller=self.get_player(ask['pcode']),
@@ -142,18 +158,29 @@ class Group(RedwoodGroup):
             if role != 'seller':
                 return
             if self.bid_queue and player.units > 0:
+                ask_queue_changed |= self.remove_ask(seller=player)
                 bid = self.bid_queue.pop(0)
+                bid_queue_changed = True
                 self.trade(
                     buyer=self.get_player(bid['pcode']),
                     seller=player,
                     price=bid['price'])
 
         self.save()
+        if bid_queue_changed:
+            self.send('bid_queue', self.bid_queue)
+        if ask_queue_changed:
+            self.send('ask_queue', self.ask_queue)
 
-        self.send('market', {
-            'bid_queue': self.bid_queue,
-            'ask_queue': self.ask_queue,
-        })
+
+    def trades(self):
+        return [
+            event.value
+            for event in Event.objects.filter(
+                channel='trades',
+                content_type=ContentType.objects.get_for_model(self),
+                group_pk=self.pk)
+        ]
 
 
 class Player(BasePlayer):
@@ -177,5 +204,14 @@ class Player(BasePlayer):
             return 10
         return None
 
+    def unit_value_cost(self):
+        if self.role() == 'buyer':
+            return self.units * self.value()
+        else:
+            return self.units * self.cost()
+
     def set_payoff(self):
-        self.payoff = 0
+        if self.role() == 'buyer':
+            self.payoff = self.currency + self.units * self.value()
+        else:
+            self.payoff = self.currency - self.units * self.cost()

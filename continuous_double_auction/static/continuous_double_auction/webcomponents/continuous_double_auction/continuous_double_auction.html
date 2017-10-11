@@ -28,20 +28,44 @@
             .mine {
                 font-weight: bold;
             }
+            .queue {
+                border: 1px solid #e3e3e3;
+                border-radius: 4px;
+                margin-bottom: 20px;
+                min-width: 200px;
+                min-height: 400px;
+            }
+            h3 {
+                text-align: center;
+            }
         </style>
     
         <redwood-period></redwood-period>
         <redwood-channel
-            id="market"
-            channel="market"
-            on-event="_onMarket">
+            id="orders"
+            channel="orders">
+        </redwood-channel>
+        <redwood-channel
+            id="bid_queue"
+            channel="bid_queue"
+            on-event="_onBidQueue">
+        </redwood-channel>
+        <redwood-channel
+            id="ask_queue"
+            channel="ask_queue"
+            on-event="_onAskQueue">
+        </redwood-channel>
+        <redwood-channel
+            id="trades"
+            channel="trades"
+            on-event="_onTrade">
         </redwood-channel>
 
-        <div class="well layout horizontal around-justified">
+        <div class="layout horizontal around-justified">
 
             <div class="layout vertical">
                 <h3>Bids</h3>
-                <div class="layout vertical center">
+                <div class="queue layout vertical center">
                     <template is="dom-repeat" items="[[ bids ]]" as="bid">
                         <span class$="[[ _mineClass(bid) ]]">[[ bid.price ]]</span>
                     </template>
@@ -50,9 +74,18 @@
 
             <div class="layout vertical">
                 <h3>Asks</h3>
-                <div class="layout vertical center">
+                <div class="queue layout vertical center">
                     <template is="dom-repeat" items="[[ asks ]]" as="ask">
                         <span class$="[[ _mineClass(ask) ]]">[[ ask.price ]]</span>
+                    </template>
+                </div>
+            </div>
+
+            <div class="layout vertical">
+                <h3>Trades</h3>
+                <div class="queue layout vertical center">
+                    <template is="dom-repeat" items="[[ trades ]]" as="trade">
+                        <span class$="[[ _mineClass(trade) ]]">[[ trade.price ]]</span>
                     </template>
                 </div>
             </div>
@@ -144,57 +177,70 @@
                     type: Array,
                     value: () => {
                         return [];
-                    }
-                }
+                    },
+                },
+                trades: {
+                    type: Array,
+                    value: () => {
+                        return [];
+                    },
+                },
             },
             _equals(x, y) {
                 return x == y;
             },
             _placeAsk() {
                 if (this.askPrice) {
-                    this.$.market.send({
+                    this.$.orders.send({
                         type: 'ask',
                         price: parseInt(this.askPrice),
                     });
                 }
             },
             _removeAsk() {
-                this.$.market.send({
+                this.$.orders.send({
                     type: 'remove',
                 });
             },
             _placeBid() {
                 if (this.bidPrice) {
-                    this.$.market.send({
+                    this.$.orders.send({
                         type: 'bid',
                         price: parseInt(this.bidPrice),
                     });
                 }
             },
             _removeBid() {
-                this.$.market.send({
+                this.$.orders.send({
                     type: 'remove',
                 });
             },
             _placeSell() {
-                this.$.market.send({
+                this.$.orders.send({
                     type: 'sell',
                 });
             },
             _placeBuy() {
-                this.$.market.send({
+                this.$.orders.send({
                     type: 'buy',
                 });
             },
             _mineClass(order) {
                 return order.pcode == oTree.participantCode ? 'mine' : '';
             },
-            _onMarket(event) {
+            _onBidQueue(event) {
                 let msg = event.detail.payload;
                 this.set('bids', []);
-                this.set('bids', msg.bid_queue);
+                this.set('bids', msg);
+            },
+            _onAskQueue(event) {
+                let msg = event.detail.payload;
                 this.set('asks', []);
-                this.set('asks', msg.ask_queue);
+                this.set('asks', msg);
+            },
+            _onTrade(event) {
+                let msg = event.detail.payload;
+                this.push('trades', msg);
             },
         });
     </script>
