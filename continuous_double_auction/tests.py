@@ -6,7 +6,7 @@ class PlayerBot(Bot):
 
     def play_round(self):
         if self.player.round_number == 1:
-            yield views.Introduction
+            yield views.Instructions
         yield Submission(views.Market, {}, check_html=False)
         yield views.Results
 
