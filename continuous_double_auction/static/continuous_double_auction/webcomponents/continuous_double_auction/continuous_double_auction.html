@@ -61,6 +61,8 @@
 
         <template is="dom-if" if="[[ _equals(role, 'buyer') ]]">
             <div class="well form-inline">
+                <p>Endowment: [[ currency ]]</p>
+                <p>Value: [[ value ]]</p>
                 <input
                     type="number"
                     class="form-control"
@@ -86,6 +88,8 @@
 
         <template is="dom-if" if="[[ _equals(role, 'seller') ]]">
             <div class="well form-inline">
+                <p>Endowment: [[ units ]]</p>
+                <p>Cost: [[ cost ]]</p>
                 <input
                     type="number"
                     class="form-control"
@@ -117,6 +121,12 @@
             properties: {
                 role: {
                     type: String,
+                },
+                currency: {
+                    type: Number,
+                },
+                units: {
+                    type: Number,
                 },
                 value: {
                     type: Number,

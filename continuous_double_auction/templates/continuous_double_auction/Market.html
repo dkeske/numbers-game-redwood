@@ -32,6 +32,8 @@
 {% block content %}
     <continuous-double-auction
         role="{{ player.role }}"
+        currency="{{ player.currency }}"
+        units="{{ player.units }}"
         value="{{ player.value }}"
         cost="{{ player.cost }}">
     </continuous-double-auction>

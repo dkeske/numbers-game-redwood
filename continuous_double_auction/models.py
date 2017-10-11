@@ -50,6 +50,22 @@ class Group(RedwoodGroup):
         buyer.save()
         seller.save()
 
+    def remove_bid(self, buyer=None):
+        found = None
+        for i, bid in enumerate(self.bid_queue):
+            if bid['pcode'] == buyer.participant.code:
+                found = i
+        if found is not None:
+            self.bid_queue.pop(found)
+
+    def remove_ask(self, seller=None):
+        found = None
+        for i, ask in enumerate(self.ask_queue):
+            if ask['pcode'] == seller.participant.code:
+                found = i
+        if found is not None:
+            self.ask_queue.pop(found)
+
     def _on_market_event(self, event):
         if not self.bid_queue:
             self.bid_queue = []
@@ -64,67 +80,53 @@ class Group(RedwoodGroup):
                 return
             if event.value['price'] > player.currency:
                 return
-            found = False
-            for bid in self.bid_queue:
-                if bid['pcode'] == event.participant.code:
-                    bid['price'] = event.value['price']
-                    found = True
-            if not found:
-                if self.ask_queue and event.value['price'] >= self.ask_queue[0]['price']:
-                    ask = self.ask_queue.pop(0)
-                    self.trade(
-                        buyer=player,
-                        seller=self.get_player(ask['pcode']),
-                        price=ask['price'])
-                else:
-                    self.bid_queue.append({
-                        'price': event.value['price'],
-                        'pcode': event.participant.code,
-                    })
-                    self.bid_queue = sorted(
-                        self.bid_queue,
-                        key=lambda bid: bid['price'],
-                        reverse=True)
+
+            self.remove_bid(buyer=player)
+
+            if self.ask_queue and event.value['price'] >= self.ask_queue[0]['price']:
+                ask = self.ask_queue.pop(0)
+                self.trade(
+                    buyer=player,
+                    seller=self.get_player(ask['pcode']),
+                    price=ask['price'])
+            else:
+                self.bid_queue.append({
+                    'price': event.value['price'],
+                    'pcode': event.participant.code,
+                })
+                self.bid_queue = sorted(
+                    self.bid_queue,
+                    key=lambda bid: bid['price'],
+                    reverse=True)
 
         if event.value['type'] == 'ask':
             if role != 'seller':
                 return
             if player.units <= 0:
                 return
-            found = False
-            for ask in self.ask_queue:
-                if ask['pcode'] == event.participant.code:
-                    ask['price'] = event.value['price']
-                    found = True
-            if not found:
-                if self.bid_queue and event.value['price'] <= self.bid_queue[0]['price']:
-                    bid = self.bid_queue.pop(0)
-                    self.trade(
-                        buyer=self.get_player(bid['pcode']),
-                        seller=player,
-                        price=bid['price'])
-                else:
-                    self.ask_queue.append({
-                        'price': event.value['price'],
-                        'pcode': event.participant.code,
-                    })
-                    self.ask_queue = sorted(
-                        self.ask_queue,
-                        key=lambda ask: ask['price'])
+
+            self.remove_ask(seller=player)
+
+            if self.bid_queue and event.value['price'] <= self.bid_queue[0]['price']:
+                bid = self.bid_queue.pop(0)
+                self.trade(
+                    buyer=self.get_player(bid['pcode']),
+                    seller=player,
+                    price=bid['price'])
+            else:
+                self.ask_queue.append({
+                    'price': event.value['price'],
+                    'pcode': event.participant.code,
+                })
+                self.ask_queue = sorted(
+                    self.ask_queue,
+                    key=lambda ask: ask['price'])
 
         if event.value['type'] == 'remove':
-            found = None
-            for i, bid in enumerate(self.bid_queue):
-                if bid['pcode'] == event.participant.code:
-                    found = i
-            if found is not None:
-                self.bid_queue.pop(found)
-            found = None
-            for i, ask in enumerate(self.ask_queue):
-                if ask['pcode'] == event.participant.code:
-                    found = i
-            if found is not None:
-                self.ask_queue.pop(found)
+            if role == 'buyer':
+                self.remove_bid(buyer=player)
+            else:
+                self.remove_ask(seller=player)
 
         if event.value['type'] == 'buy':
             if role != 'buyer':
@@ -147,6 +149,7 @@ class Group(RedwoodGroup):
                     price=bid['price'])
 
         self.save()
+
         self.send('market', {
             'bid_queue': self.bid_queue,
             'ask_queue': self.ask_queue,
