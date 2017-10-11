@@ -1,0 +1,192 @@
+<link
+    rel="import"
+    href="/static/bower_components/polymer/polymer.html" />
+<link
+    rel="import"
+    href="/static/bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link
+    rel="import"
+    href="/static/otree-redwood/webcomponents/redwood-channel/redwood-channel.html">
+<link
+    rel="import"
+    href="/static/otree-redwood/webcomponents/redwood-period/redwood-period.html">
+
+    
+<dom-module id="continuous-double-auction">
+
+    <template>
+
+        <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
+        <script src="/static/bootstrap/js/bootstrap.min.js"></script>
+
+        <style include="iron-flex iron-flex-alignment"></style>
+        <style>
+            :host {
+                display: flex;
+                flex-direction: column;
+            }
+            .mine {
+                font-weight: bold;
+            }
+        </style>
+    
+        <redwood-period></redwood-period>
+        <redwood-channel
+            id="market"
+            channel="market"
+            on-event="_onMarket">
+        </redwood-channel>
+
+        <div class="well layout horizontal around-justified">
+
+            <div class="layout vertical">
+                <h3>Bids</h3>
+                <div class="layout vertical center">
+                    <template is="dom-repeat" items="[[ bids ]]" as="bid">
+                        <span class$="[[ _mineClass(bid) ]]">[[ bid.price ]]</span>
+                    </template>
+                </div>
+            </div>
+
+            <div class="layout vertical">
+                <h3>Asks</h3>
+                <div class="layout vertical center">
+                    <template is="dom-repeat" items="[[ asks ]]" as="ask">
+                        <span class$="[[ _mineClass(ask) ]]">[[ ask.price ]]</span>
+                    </template>
+                </div>
+            </div>
+
+        </div>
+
+        <template is="dom-if" if="[[ _equals(role, 'buyer') ]]">
+            <div class="well form-inline">
+                <input
+                    type="number"
+                    class="form-control"
+                    min="1"
+                    step="1"
+                    pattern="\d+" 
+                    placeholder="Bid"
+                    value="{{ bidPrice::input }}" />
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    on-tap="_placeBid">Bid</button>
+                <button
+                    type="button"
+                    class="btn"
+                    on-tap="_removeBid">Remove</button>
+                <button
+                    type="button"
+                    class="btn"
+                    on-tap="_placeBuy">Buy</button>
+            </div>
+        </template>
+
+        <template is="dom-if" if="[[ _equals(role, 'seller') ]]">
+            <div class="well form-inline">
+                <input
+                    type="number"
+                    class="form-control"
+                    min="1"
+                    step="1"
+                    pattern="\d+" 
+                    placeholder="Ask"
+                    value="{{ askPrice::input }}" />
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    on-tap="_placeAsk">Ask</button>
+                <button
+                    type="button"
+                    class="btn"
+                    on-tap="_removeAsk">Remove</button>
+                <button
+                    type="button"
+                    class="btn"
+                    on-tap="_placeSell">Sell</button>
+            </div>
+        </template>
+
+    </template>
+
+    <script>
+        Polymer({
+            is: 'continuous-double-auction',
+            properties: {
+                role: {
+                    type: String,
+                },
+                value: {
+                    type: Number,
+                },
+                cost: {
+                    type: Number,
+                },
+                bids: {
+                    type: Array,
+                    value: () => {
+                        return [];
+                    }
+                },
+                asks: {
+                    type: Array,
+                    value: () => {
+                        return [];
+                    }
+                }
+            },
+            _equals(x, y) {
+                return x == y;
+            },
+            _placeAsk() {
+                if (this.askPrice) {
+                    this.$.market.send({
+                        type: 'ask',
+                        price: parseInt(this.askPrice),
+                    });
+                }
+            },
+            _removeAsk() {
+                this.$.market.send({
+                    type: 'remove',
+                });
+            },
+            _placeBid() {
+                if (this.bidPrice) {
+                    this.$.market.send({
+                        type: 'bid',
+                        price: parseInt(this.bidPrice),
+                    });
+                }
+            },
+            _removeBid() {
+                this.$.market.send({
+                    type: 'remove',
+                });
+            },
+            _placeSell() {
+                this.$.market.send({
+                    type: 'sell',
+                });
+            },
+            _placeBuy() {
+                this.$.market.send({
+                    type: 'buy',
+                });
+            },
+            _mineClass(order) {
+                return order.pcode == oTree.participantCode ? 'mine' : '';
+            },
+            _onMarket(event) {
+                let msg = event.detail.payload;
+                this.set('bids', []);
+                this.set('bids', msg.bid_queue);
+                this.set('asks', []);
+                this.set('asks', msg.ask_queue);
+            },
+        });
+    </script>
+
+</dom-module>
