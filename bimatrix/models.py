@@ -15,8 +15,8 @@ This is a configurable bimatrix game.
 class Constants(BaseConstants):
     name_in_url = 'bimatrix'
     players_per_group = 2
-		# Maximum number of rounds, actual number is taken as the max round
-		# in the config file.
+	# Maximum number of rounds, actual number is taken as the max round
+	# in the config file.
     num_rounds = 100
     base_points = 0
 
