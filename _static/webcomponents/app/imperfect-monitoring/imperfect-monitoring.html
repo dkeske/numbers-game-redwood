@@ -47,7 +47,7 @@
                 margin: 10px 0 10px 0;
                 width: 200px;
                 height: 30px;
-                background: lightgrey;
+                background: black;
                 align-self: flex-end;
             }
 
@@ -279,13 +279,13 @@
                         type: "line",
                         color: color,
                         lineWidth: 10,
-                        data: [[0, a], [this.subperiodLength-1, a]],
+                        data: [[0, a], [this.subperiodLength, a]],
                     });
                     this.currSubperiodGraph.addSeries({
                         type: "line",
                         color: color,
                         lineWidth: 10,
-                        data: [[0, b], [this.subperiodLength-1, b]],
+                        data: [[0, b], [this.subperiodLength, b]],
                     });
                 }
                 if (msg.clearCurrentSubperiod) {
@@ -315,6 +315,18 @@
                                 this.currSubperiodGraph.series[i].data[j].y);
                         }
                     }
+                    // Add horizontal plot lines to the history graph.
+                    this.historyGraph.xAxis[0].addPlotLine({
+                        value: this.historyGraph.series[0].data.length,
+                        zIndex: 10,
+                        width: 2,
+                        color: 'lightgrey'
+                    });
+                    // If history graph set to reverse, reverse it.
+                    //if 
+                    this.historyGraph.xAxis[0].update({
+                        reversed: true
+                    });
                     // Clear the current subperiod graph.
                     this.currSubperiodGraph.series[0].setData([]);
                     this.currSubperiodGraph.series[1].setData([]);
@@ -444,14 +456,7 @@
                                this.subperiodLength) - 1,
                         labels: { enabled: false },
                         scrollbar: { enabled: true },
-                        tickLength: 0,
-                        plotLines: [{
-                            zIndex: 5,
-                            value: 0,
-                            width: 0,
-                            color: 'lightgrey',
-                            reversed: true
-                        }]
+                        tickLength: 0
                     },
                     yAxis: {
                         title: { text: undefined },
@@ -463,7 +468,12 @@
                         labels: { enabled: false },
                     },
                     plotOptions: {
-                        line: {marker: {enabled: false}},
+                        line: {
+                            marker: {
+                                enabled: false
+                                },
+                            linecap: "square"
+                            },
                         series: {
                             states: {
                                 hover: {
@@ -495,7 +505,7 @@
                         animation: false,
                         renderTo: element,
                         enabled: false,
-                        width: 150,
+                        width: 100,
                     },
                     title: { text: null },
                     exporting: { enabled: false },
@@ -524,9 +534,8 @@
                             marker: {
                                 enabled: false
                                 },
-                            linecap: "square",
+                            linecap: "square"
                             },
-                        linecap: "square",
                         series: {
                             pointPadding: 0,
                             borderWidth: 0,
