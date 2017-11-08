@@ -166,6 +166,10 @@
                     type: Boolean,
                     value: false,
                 },
+                reverseHistoryGraph: {
+                    type: Boolean,
+                    value: true,
+                },
             },
             ready() {
                 // separate each player's payoffs into two separate arrays
@@ -279,13 +283,13 @@
                         type: "line",
                         color: color,
                         lineWidth: 10,
-                        data: [[0, a], [this.subperiodLength, a]],
+                        data: [[0-.5, a], [this.subperiodLength-.3, a]],
                     });
                     this.currSubperiodGraph.addSeries({
                         type: "line",
                         color: color,
                         lineWidth: 10,
-                        data: [[0, b], [this.subperiodLength, b]],
+                        data: [[0-.5, b], [this.subperiodLength-.3, b]],
                     });
                 }
                 if (msg.clearCurrentSubperiod) {
@@ -317,15 +321,14 @@
                     }
                     // Add horizontal plot lines to the history graph.
                     this.historyGraph.xAxis[0].addPlotLine({
-                        value: this.historyGraph.series[0].data.length,
+                        value: this.historyGraph.series[0].data.length-.3,
                         zIndex: 10,
                         width: 2,
-                        color: 'lightgrey'
+                        color: 'black'
                     });
                     // If history graph set to reverse, reverse it.
-                    //if 
                     this.historyGraph.xAxis[0].update({
-                        reversed: true
+                        reversed: this.reverseHistoryGraph
                     });
                     // Clear the current subperiod graph.
                     this.currSubperiodGraph.series[0].setData([]);
@@ -349,9 +352,7 @@
                         const xmax = data[data.length-1][0];
                         const max = xmax + this.subperiodLength;
                         const min = max - (displayedSubperiods * this.subperiodLength) + 1;
-                        if (min > 0) {
-                            this.historyGraph.xAxis[0].setExtremes(min, max);
-                        }
+                        this.historyGraph.xAxis[0].setExtremes(min, max);
                     }
                 }
                 if (msg.hasOwnProperty('pauseProgress')) {
@@ -393,9 +394,7 @@
                     yAxis: {
                         title: { text: undefined },
                         min: 0,
-                        max: this.maxPayoff*1.05,
-                        minPadding: 0.05,
-                        maxPadding: 0.05,
+                        max: this.maxPayoff,
                         endOnTick: false,
                         labels: { enabled: true },
                     },
@@ -411,7 +410,7 @@
                         series: {
                             pointPadding: 0,
                             borderWidth: 0,
-                            pointWidth: 20,
+                            pointWidth: 15,
                             states: {
                                 hover: {
                                     enabled: false,
@@ -451,9 +450,12 @@
                     legend: { enabled: false },
                     credits: { enabled: false },
                     xAxis: {
-                        min: 0,
-                        max: ((this.displayedSubperiods == 0 ? 10 : this.displayedSubperiods) *
-                               this.subperiodLength) - 1,
+                        //min: 0.05,
+                        //max: ((this.displayedSubperiods == 0 ? 10 : this.displayedSubperiods) *
+                        //       this.subperiodLength) - 1,
+                        min: 1 - ((this.displayedSubperiods == 0 ? 10 : this.displayedSubperiods) *
+                                    this.subperiodLength),
+                        max: this.subperiodLength,
                         labels: { enabled: false },
                         scrollbar: { enabled: true },
                         tickLength: 0
