@@ -60,9 +60,11 @@ class Group(DecisionGroup):
 
     def period_length(self):
         num_subperiods = Constants.treatments[self.session.config['treatment']]['num_subperiods'][self.round_number-1]
+        #print(num_subperiods)
         rest_length = self.session.config['rest_length']
         subperiod_length = self.session.config['subperiod_length']
         seconds_per_tick = self.session.config['seconds_per_tick']
+        period_length = num_subperiods * ((subperiod_length + rest_length) * seconds_per_tick)
         return (
             num_subperiods *
             ((subperiod_length + rest_length) * seconds_per_tick)
