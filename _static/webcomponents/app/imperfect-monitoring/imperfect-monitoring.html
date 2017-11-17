@@ -323,15 +323,14 @@
                     //             this.currSubperiodGraph.series[i].data[j].y);
                     //     }
                     // }
-                    for (let i=0; i < this.currSubperiodGraph.series[0].data.length; i++) {
+                    for (let i = this.currSubperiodGraph.series[0].data.length-1; i >= 0; i--) {
                         this.historyGraph.series[0].addPoint(
                             this.currSubperiodGraph.series[0].data[i].y);
                     }
-                    average_series = this.currSubperiodGraph.series[1].data
-                    this.historyGraph.series[1].addPoint(
-                        [this.historyGraph.series[0].data.length - this.subPeriodLength -.3, average_series[0].y],
-                        [this.historyGraph.series[0].data.length -.5, average_series[1].y]
-                    )
+                    
+                    this.historyGraph.series[1].addPoint([this.historyGraph.series[0].data.length - this.subperiodLength -.3, this.currSubperiodGraph.series[1].data[0].y])
+                    this.historyGraph.series[1].addPoint([this.historyGraph.series[0].data.length -.5, this.currSubperiodGraph.series[1].data[0].y])
+                    
                     // Add horizontal plot lines to the history graph.
                     this.historyGraph.xAxis[0].addPlotLine({
                         value: this.historyGraph.series[0].data.length-.3,

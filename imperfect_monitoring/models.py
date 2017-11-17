@@ -32,16 +32,21 @@ class Constants(BaseConstants):
             ],
             # [round(max(3, numpy.random.exponential(20))) for i in range(10)] 
             'num_subperiods': [
-                7,
-                3,
-                29,
-                11,
-                9,
-                6,
-                6,
-                3,
-                6,
-                13,
+                100,
+                100,
+                100,
+                100,
+                100
+                # 7,
+                # 3,
+                # 29,
+                # 11,
+                # 9,
+                # 6,
+                # 6,
+                # 3,
+                # 6,
+                # 13,
             ]
         }
     }
