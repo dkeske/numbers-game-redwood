@@ -46,7 +46,7 @@
             #progress {
                 margin: 10px 0 10px 0;
                 width: 200px;
-                height: 30px;
+                height: 20px;
                 background: black;
                 align-self: flex-end;
             }
@@ -390,7 +390,7 @@
                         animation: false,
                         renderTo: this.$.currSubperiodGraph,
                         enabled: false,
-                        width: 150,
+                        width: 150
                     },
                     title: { text: null },
                     exporting: { enabled: false },
@@ -406,7 +406,9 @@
                     yAxis: {
                         title: { text: undefined },
                         min: 0,
-                        max: this.maxPayoff,
+                        max: this.maxPayoff*1.05,
+                        minPadding: 0.05,
+                        maxPadding: 0.05,
                         endOnTick: false,
                         labels: { enabled: true },
                     },
@@ -454,7 +456,8 @@
                         renderTo: this.$.historyGraph,
                         enabled: false,
                         reflow: false,
-                        width: 600
+                        width: 600,
+                        height: 425
                     },
                     title: { text: null },
                     exporting: { enabled: false },

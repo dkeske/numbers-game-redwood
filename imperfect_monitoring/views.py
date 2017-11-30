@@ -41,19 +41,40 @@ class Results(Page):
 
 
 def get_output_table(events):
-    table = []
-    for e in events:
-        if e.channel == 'decisions':
-            table.append(e.value),
-            table.append(e.participant.code) 
-        if e.channel == 'tick':
-            if 'realizedPayoffs' in e.value:
-                table.append(e.value ['realizedPayoffs'])
-            if 'fixedDecisions' in e.value:
-                table.append(e.value ['fixedDecisions'])
-    print(table)
-    return table
-
+    header = [
+        'session_code',
+        'subsession_id',
+        'id_in_subsession',
+        'timestamp',     
+        'p1_code',
+        'p2_code',
+        'p1_strategy',
+        'p2_strategy',
+        'p1_realized_payoffs',
+        'p2_realized_payoffs'
+    ]
+    if not events:
+        return [], []
+    rows = []
+    p1, p2 = events[0].group.get_players()
+    p1_code = p1.participant.code
+    p2_code = p2.participant.code
+    group = events[0].group
+    for event in events:
+        if event.channel == 'tick' and 'realizedPayoffs' in event.value:
+            rows.append([
+                group.session.code,
+                group.subsession_id,
+                group.id_in_subsession,
+                event.timestamp,
+                p1_code,
+                p2_code,   
+                event.value['fixedDecisions'][p1_code],
+                event.value['fixedDecisions'][p2_code],
+                event.value['realizedPayoffs'][p1_code],
+                event.value['realizedPayoffs'][p2_code]
+            ])
+    return header, rows
 
 page_sequence = [
         Introduction,
