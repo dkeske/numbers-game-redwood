@@ -41,17 +41,23 @@ class Results(Page):
 
 
 def get_output_table(events):
+    # Give sessionID, PeriodID (or game#), player pair IDs, parameter values, timestamp of start;
+    # player1_action, player2_action, countGood_player1, countGood_player2, AvgPayoff_player1 , AvgPayoff_player2
+
     header = [
-        'session_code',
+        'session_ID',
         'subsession_id',
         'id_in_subsession',
-        'timestamp',     
+        'parameters',
+        'timestamp_of_start',     
         'p1_code',
         'p2_code',
-        'p1_strategy',
-        'p2_strategy',
-        'p1_realized_payoffs',
-        'p2_realized_payoffs'
+        'p1_action',
+        'p2_action',
+        'p1_countGood',
+        'p2_countGood',
+        'p1_avg_payoffs',
+        'p2_avg_payoffs'
     ]
     if not events:
         return [], []
@@ -61,18 +67,23 @@ def get_output_table(events):
     p2_code = p2.participant.code
     group = events[0].group
     for event in events:
-        if event.channel == 'tick' and 'realizedPayoffs' in event.value:
+        print(event.value)
+        if event.channel == 'tick' and 'pauseProgress' in event.value and event.value['pauseProgress'] == 0.5:
             rows.append([
                 group.session.code,
                 group.subsession_id,
                 group.id_in_subsession,
+                #event.participant.code,
+                event.value['parameters'],
                 event.timestamp,
                 p1_code,
-                p2_code,   
+                p2_code,
                 event.value['fixedDecisions'][p1_code],
                 event.value['fixedDecisions'][p2_code],
-                event.value['realizedPayoffs'][p1_code],
-                event.value['realizedPayoffs'][p2_code]
+                event.value['countGood'][p1_code],
+                event.value['countGood'][p2_code],
+                event.value['totalPayoffs'][p1_code]/event.value['subperiodLength'],
+                event.value['totalPayoffs'][p2_code]/event.value['subperiodLength']
             ])
     return header, rows
 

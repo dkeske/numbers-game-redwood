@@ -56,11 +56,12 @@ class Group(DecisionGroup):
 
     state = models.CharField(max_length=10)
     t = models.PositiveIntegerField()
+    total_payoffs = JSONField()
+    countGood = JSONField()
     fixed_group_decisions = JSONField()
 
     def period_length(self):
         num_subperiods = Constants.treatments[self.session.config['treatment']]['num_subperiods'][self.round_number-1]
-        #print(num_subperiods)
         rest_length = self.session.config['rest_length']
         subperiod_length = self.session.config['subperiod_length']
         seconds_per_tick = self.session.config['seconds_per_tick']
@@ -75,8 +76,12 @@ class Group(DecisionGroup):
 
         self.state = 'results'
         self.t = 0
+        self.total_payoffs = {}
+        self.countGood = {}
         self.fixed_group_decisions = {}
         for i, player in enumerate(self.get_players()):
+            self.total_payoffs[player.participant.code] = 0
+            self.countGood[player.participant.code] = 0
             self.fixed_group_decisions[player.participant.code] = 0
         self.save()
 
@@ -104,7 +109,12 @@ class Group(DecisionGroup):
                 self.t = 0
         elif self.state == 'pause':
             msg = {
-                'pauseProgress': (self.t+1)/self.session.config['rest_length']
+                'parameters': Constants.treatments[self.session.config['treatment']]['payoff_matrix'],
+                'pauseProgress': (self.t+1)/self.session.config['rest_length'],
+                'fixedDecisions' : self.fixed_group_decisions,
+                'countGood': self.countGood,
+                'totalPayoffs': self.total_payoffs,
+                'subperiodLength': self.session.config['subperiod_length']
             }
             self.t += 1
             if self.t == self.session.config['rest_length']:
@@ -112,6 +122,8 @@ class Group(DecisionGroup):
                 self.state = 'results'
                 self.t = 0
                 for i, player in enumerate(self.get_players()):
+                    self.total_payoffs[player.participant.code] = 0
+                    self.countGood[player.participant.code] = 0
                     if player.participant.code in self.group_decisions:
                         self.fixed_group_decisions[player.participant.code] = self.group_decisions[player.participant.code]
         else:
@@ -152,10 +164,13 @@ class Group(DecisionGroup):
             else:
                 if my_decision:
                     payoff_index = 0
+                    self.countGood[player.participant.code] += 1
                 else:
                     payoff_index = 2
+                    self.countGood[player.participant.code] += 1
 
             realized_payoffs[player.participant.code] = payoffs[payoff_index]
+            self.total_payoffs[player.participant.code] += realized_payoffs[player.participant.code]
 
         return realized_payoffs
 
