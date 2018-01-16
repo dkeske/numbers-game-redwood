@@ -166,10 +166,6 @@
                     type: Boolean,
                     value: false,
                 },
-                reverseHistoryGraph: {
-                    type: Boolean,
-                    value: true,
-                },
             },
             ready() {
                 // separate each player's payoffs into two separate arrays
@@ -338,7 +334,6 @@
                         width: 2,
                         color: 'black'
                     });
-                    // If history graph set to reverse, reverse it.
                     this.historyGraph.xAxis[0].update({
                         reversed: this.reverseHistoryGraph
                     });

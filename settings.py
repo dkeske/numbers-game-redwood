@@ -150,11 +150,10 @@ SESSION_CONFIGS = [
         'displayed_subperiods': 10,
         'subperiod_length': 6,
         'rest_length': 6,
-        'seconds_per_tick': .5,
+        'seconds_per_tick': 1,
         'display_average_a_graph': True,
         'display_average_b_graph': True,
-        'display_average_ab_graph': False,
-        'reverse_history_graph': True
+        'display_average_ab_graph': False
     },
     {
         'name': 'bimatrix',

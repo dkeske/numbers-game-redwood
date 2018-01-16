@@ -46,7 +46,6 @@ def get_output_table(events):
 
     header = [
         'timestamp_of_start',
-        'parameters',
         'session_ID',
         'period_id',
         'pair_id',     
@@ -56,8 +55,12 @@ def get_output_table(events):
         'p2_action',
         'p1_countGood',
         'p2_countGood',
+        'subperiod_length',
         'p1_avg_payoffs',
-        'p2_avg_payoffs'
+        'p2_avg_payoffs',
+        'num_subperiods',
+        'payoff_matrix(AGood, ABad, BGood, BBad)',
+        'probability_matrix(AA, AB, BA, BB)'
     ]
     if not events:
         return [], []
@@ -67,13 +70,14 @@ def get_output_table(events):
     p2_code = p2.participant.code
     group = events[0].group
     prev_session_code = None
-    prev_parameters = None
+    prev_subperiod = None
+    prev_payoff = None
+    prev_probability = None
     for event in events:
-        print(dir(group))
+        #print(dir(group))
         if event.channel == 'tick' and 'pauseProgress' in event.value and event.value['pauseProgress'] == 0.5:
             rows.append([
                 event.timestamp,
-                event.value['parameters'] if event.value['parameters'] != prev_parameters else "",
                 group.session.code if group.session.code != prev_session_code else "",
                 group.subsession_id,
                 group.id_in_subsession,
@@ -83,11 +87,17 @@ def get_output_table(events):
                 event.value['fixedDecisions'][p2_code],
                 event.value['countGood'][p1_code],
                 event.value['countGood'][p2_code],
+                event.value['subperiodLength'],
                 event.value['totalPayoffs'][p1_code]/event.value['subperiodLength'],
-                event.value['totalPayoffs'][p2_code]/event.value['subperiodLength']
+                event.value['totalPayoffs'][p2_code]/event.value['subperiodLength'],
+                event.value['numSubperiods'] if event.value['numSubperiods'] != prev_subperiod else "",
+                event.value['payoffMatrix'] if event.value['payoffMatrix'] != prev_payoff else "",
+                event.value['probabilityMatrix'] if event.value['probabilityMatrix'] != prev_probability else "",
             ])
             prev_session_code = copy.copy(group.session.code)
-            prev_parameters = copy.copy(event.value['parameters'])
+            prev_subperiod = copy.copy(event.value['numSubperiods'])
+            prev_payoff = copy.copy(event.value['payoffMatrix'])
+            prev_probability = copy.copy(event.value['probabilityMatrix'])
 
     rows.append("")
             

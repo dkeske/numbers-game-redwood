@@ -30,7 +30,7 @@ class Constants(BaseConstants):
                 [[0.4, 0.4], [0.6, 0.6]],
                 [[0.6, 0.6], [0.8, 0.8]],
             ],
-            # [round(max(3, numpy.random.exponential(20))) for i in range(10)] 
+            #[round(max(3, numpy.random.exponential(20))) for i in range(10)] 
             'num_subperiods': [
                 7,
                 3,
@@ -109,7 +109,9 @@ class Group(DecisionGroup):
                 self.t = 0
         elif self.state == 'pause':
             msg = {
-                'parameters': Constants.treatments[self.session.config['treatment']]['payoff_matrix'],
+                'payoffMatrix': Constants.treatments[self.session.config['treatment']]['payoff_matrix'],
+                'probabilityMatrix': Constants.treatments[self.session.config['treatment']]['probability_matrix'],
+                'numSubperiods': Constants.treatments[self.session.config['treatment']]['num_subperiods'][self.round_number-1],
                 'pauseProgress': (self.t+1)/self.session.config['rest_length'],
                 'fixedDecisions' : self.fixed_group_decisions,
                 'countGood': self.countGood,
