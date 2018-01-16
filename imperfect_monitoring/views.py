@@ -2,7 +2,7 @@
 from __future__ import division
 from ._builtin import Page, WaitPage
 from .models import Constants
-
+import copy
 
 def vars_for_all_templates(self):
     return {
@@ -45,11 +45,11 @@ def get_output_table(events):
     # player1_action, player2_action, countGood_player1, countGood_player2, AvgPayoff_player1 , AvgPayoff_player2
 
     header = [
-        'session_ID',
-        'subsession_id',
-        'id_in_subsession',
+        'timestamp_of_start',
         'parameters',
-        'timestamp_of_start',     
+        'session_ID',
+        'period_id',
+        'pair_id',     
         'p1_code',
         'p2_code',
         'p1_action',
@@ -66,16 +66,17 @@ def get_output_table(events):
     p1_code = p1.participant.code
     p2_code = p2.participant.code
     group = events[0].group
+    prev_session_code = None
+    prev_parameters = None
     for event in events:
-        print(event.value)
+        print(dir(group))
         if event.channel == 'tick' and 'pauseProgress' in event.value and event.value['pauseProgress'] == 0.5:
             rows.append([
-                group.session.code,
+                event.timestamp,
+                event.value['parameters'] if event.value['parameters'] != prev_parameters else "",
+                group.session.code if group.session.code != prev_session_code else "",
                 group.subsession_id,
                 group.id_in_subsession,
-                #event.participant.code,
-                event.value['parameters'],
-                event.timestamp,
                 p1_code,
                 p2_code,
                 event.value['fixedDecisions'][p1_code],
@@ -85,6 +86,11 @@ def get_output_table(events):
                 event.value['totalPayoffs'][p1_code]/event.value['subperiodLength'],
                 event.value['totalPayoffs'][p2_code]/event.value['subperiodLength']
             ])
+            prev_session_code = copy.copy(group.session.code)
+            prev_parameters = copy.copy(event.value['parameters'])
+
+    rows.append("")
+            
     return header, rows
 
 page_sequence = [
