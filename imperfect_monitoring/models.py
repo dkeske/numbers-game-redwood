@@ -21,33 +21,6 @@ class Constants(BaseConstants):
     players_per_group = 2
     num_rounds = 10
 
-    # treatments = {
-    #     'A': {
-    #         'payoff_matrix': [
-    #             [[100, 100], [0, 0]],
-    #             [[125, 125], [25, 25]],
-    #         ],
-    #         'probability_matrix': [
-    #             [[0.4, 0.4], [0.6, 0.6]],
-    #             [[0.6, 0.6], [0.8, 0.8]],
-    #         ],
-    #         #[round(max(3, numpy.random.exponential(20))) for i in range(10)] 
-    #         'num_subperiods': [
-    #             7,
-    #             3,
-    #             29,
-    #             11,
-    #             9,
-    #             6,
-    #             6,
-    #             3,
-    #             6,
-    #             13,
-    #         ]
-    #     }
-    # }
-
-
 def parse_config(config_file):
     with open('imperfect_monitoring/configs/' + config_file) as f:
         rows = list(csv.DictReader(f))
@@ -62,7 +35,6 @@ def parse_config(config_file):
             'display_average_a_graph': True if row['display_average_a_graph'] == 'TRUE' else False,
             'display_average_b_graph': True if row['display_average_b_graph'] == 'TRUE' else False,
             'display_average_ab_graph': True if row['display_average_ab_graph'] == 'TRUE' else False,
-            #'period_length': int(row['period_length']),
             'num_subperiods': int(row['num_subperiods']),
             'payoff_matrix': [
                 [float(row['pi1(AGood)']), float(row['pi2(AGood)'])], [float(row['pi1(ABad)']), float(row['pi2(ABad)'])],
@@ -79,13 +51,6 @@ class Subsession(BaseSubsession):
     def before_session_starts(self):
         config = parse_config(self.session.config['config_file'])
         self.group_randomly()
-        # if self.round_number > len(config):
-        #     self.group_randomly()
-        # elif config[self.round_number-1]['shuffle_role']:
-        #     self.group_randomly()
-        # else:
-        #     self.group_randomly(fixed_id_in_group=True)
-
 
 class Group(DecisionGroup):
 

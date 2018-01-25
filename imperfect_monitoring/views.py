@@ -41,9 +41,6 @@ class Results(Page):
 
 
 def get_output_table(events):
-    # Give sessionID, PeriodID (or game#), player pair IDs, parameter values, timestamp of start;
-    # player1_action, player2_action, countGood_player1, countGood_player2, AvgPayoff_player1 , AvgPayoff_player2
-
     header = [
         'timestamp_of_start',
         'session_ID',
@@ -55,9 +52,9 @@ def get_output_table(events):
         'p2_action',
         'p1_countGood',
         'p2_countGood',
+        'subperiod_length',
         'p1_periodResult',
         'p2_periodResult',
-        'subperiod_length',
         'p1_avg_payoffs',
         'p2_avg_payoffs',
         'num_subperiods',
@@ -89,9 +86,9 @@ def get_output_table(events):
                 event.value['fixedDecisions'][p2_code],
                 event.value['countGood'][p1_code],
                 event.value['countGood'][p2_code],
+                event.value['subperiodLength'],
                 event.value['periodResult'][p1_code],
                 event.value['periodResult'][p2_code],
-                event.value['subperiodLength'],
                 event.value['totalPayoffs'][p1_code]/event.value['subperiodLength'],
                 event.value['totalPayoffs'][p2_code]/event.value['subperiodLength'],
                 event.value['numSubperiods'] if event.value['numSubperiods'] != prev_subperiod else "",

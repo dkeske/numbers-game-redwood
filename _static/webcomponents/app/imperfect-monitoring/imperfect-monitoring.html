@@ -256,9 +256,6 @@
                         totalPayoff += subperiodRealizedPayoffs[i].y;
                     }
                     const averagePayoff = totalPayoff / subperiodRealizedPayoffs.length;
-                    // for (let i = 0; i < subperiodRealizedPayoffs.length; i++) {
-                    //     this.currSubperiodGraph.series[1].addPoint(averagePayoff);
-                    // }
                     this.currSubperiodGraph.series[1].update({
                         type: "line",
                         data: [[0-.5, averagePayoff], [this.subperiodLength-.3, averagePayoff]],
@@ -294,7 +291,6 @@
                 }
                 if (msg.clearCurrentSubperiod) {
                     // Add averages to the average charts.
-
                     const aHistory = this.averages.filter((e) => e.decision == 1);
                     const bHistory = this.averages.filter((e) => e.decision == 0);
 
@@ -313,12 +309,6 @@
 
                     // Append the current subperiod graph to the history graph.
                     const subperiodStart = this.historyGraph.series[0].data.length;
-                    // for (let i = 0; i < 2; i++) {
-                    //     for (let j = 0; j < this.currSubperiodGraph.series[i].data.length; j++) {
-                    //         this.historyGraph.series[i].addPoint(
-                    //             this.currSubperiodGraph.series[i].data[j].y);
-                    //     }
-                    // }
                     for (let i = this.currSubperiodGraph.series[0].data.length-1; i >= 0; i--) {
                         this.historyGraph.series[0].addPoint(
                             this.currSubperiodGraph.series[0].data[i].y);
@@ -337,9 +327,11 @@
                     this.historyGraph.xAxis[0].update({
                         reversed: true
                     });
+
                     // Clear the current subperiod graph.
                     this.currSubperiodGraph.series[0].setData([]);
                     this.currSubperiodGraph.series[1].setData([]);
+                    
                     // Removing the series messes with the indexing.
                     for (let i = 0; i < 2; i++) {
                         const series = this.currSubperiodGraph.series[2];
@@ -460,9 +452,6 @@
                     legend: { enabled: false },
                     credits: { enabled: false },
                     xAxis: {
-                        //min: 0.05,
-                        //max: ((this.displayedSubperiods == 0 ? 10 : this.displayedSubperiods) *
-                        //       this.subperiodLength) - 1,
                         min: 1 - ((this.displayedSubperiods == 0 ? 10 : this.displayedSubperiods) *
                                     this.subperiodLength),
                         max: this.subperiodLength,
