@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 from ._builtin import Page, WaitPage
-from .models import Constants
+from .models import Constants, parse_config
 import copy
 
 def vars_for_all_templates(self):
     return {
-        "payoff_matrix": Constants.treatments[self.session.config['treatment']]['payoff_matrix'],
-        "probability_matrix": Constants.treatments[self.session.config['treatment']]['probability_matrix'],
+        "payoff_matrix": parse_config(self.session.config['config_file'])[self.round_number-1]['payoff_matrix'],
+        "probability_matrix": parse_config(self.session.config['config_file'])[self.round_number-1]['probability_matrix'],
     }
 
 
@@ -25,9 +25,9 @@ class DecisionWaitPage(WaitPage):
 class Decision(Page):
 
     def vars_for_template(self):
-        displayed_subperiods = self.session.config['displayed_subperiods'] 
+        displayed_subperiods = parse_config(self.session.config['config_file'])[self.round_number-1]['displayed_subperiods'],
         if displayed_subperiods == 0:
-            displayed_subperiods = Constants.treatments[self.session.config['treatment']]['num_subperiods'][self.round_number-1]
+            displayed_subperiods = parse_config(self.session.config['config_file'])[self.round_number-1]['displayed_subperiods'],
         return {
             'displayed_subperiods': displayed_subperiods
         }
@@ -55,6 +55,8 @@ def get_output_table(events):
         'p2_action',
         'p1_countGood',
         'p2_countGood',
+        'p1_periodResult',
+        'p2_periodResult',
         'subperiod_length',
         'p1_avg_payoffs',
         'p2_avg_payoffs',
@@ -87,6 +89,8 @@ def get_output_table(events):
                 event.value['fixedDecisions'][p2_code],
                 event.value['countGood'][p1_code],
                 event.value['countGood'][p2_code],
+                event.value['periodResult'][p1_code],
+                event.value['periodResult'][p2_code],
                 event.value['subperiodLength'],
                 event.value['totalPayoffs'][p1_code]/event.value['subperiodLength'],
                 event.value['totalPayoffs'][p2_code]/event.value['subperiodLength'],
