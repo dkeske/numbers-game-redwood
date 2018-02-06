@@ -55,7 +55,7 @@ def get_output_table(events):
     p1_code = p1.participant.code
     p2_code = p2.participant.code
     group = events[0].group
-    if group.num_subperiods() is None:
+    if group.num_subperiods() == 0:
         for tick in range((maxT - minT).seconds):
             currT = minT + timedelta(seconds=tick)
             group_decisions_events = []
