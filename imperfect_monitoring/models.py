@@ -31,7 +31,7 @@ def parse_config(config_file):
             'displayed_subperiods': int(row['displayed_subperiods']),
             'subperiod_length': int(row['subperiod_length']),
             'rest_length': int(row['rest_length']),
-            'seconds_per_tick': int(row['seconds_per_tick']),
+            'seconds_per_tick': float(row['seconds_per_tick']),
             'display_average_a_graph': True if row['display_average_a_graph'] == 'TRUE' else False,
             'display_average_b_graph': True if row['display_average_b_graph'] == 'TRUE' else False,
             'display_average_ab_graph': True if row['display_average_ab_graph'] == 'TRUE' else False,
