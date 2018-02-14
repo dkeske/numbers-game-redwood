@@ -35,7 +35,7 @@ def parse_config(config_file):
             'display_average_a_graph': True if row['display_average_a_graph'] == 'TRUE' else False,
             'display_average_b_graph': True if row['display_average_b_graph'] == 'TRUE' else False,
             'display_average_ab_graph': True if row['display_average_ab_graph'] == 'TRUE' else False,
-            'num_subperiods': int(row['num_subperiods']),
+            'num_subperiods': 0 if row['num_subperiods'] == 'RANDOM' else int(row['num_subperiods']),
             'payoff_matrix': [
                 [float(row['pi1(AGood)']), float(row['pi2(AGood)'])], [float(row['pi1(ABad)']), float(row['pi2(ABad)'])],
                 [float(row['pi1(BGood)']), float(row['pi2(BGood)'])], [float(row['pi1(BBad)']), float(row['pi2(BBad)'])]
@@ -79,13 +79,9 @@ class Group(DecisionGroup):
     def period_length(self):
         num_subperiods = parse_config(self.session.config['config_file'])[self.round_number-1]['num_subperiods']
         rest_length = parse_config(self.session.config['config_file'])[self.round_number-1]['rest_length']
-        subperiod_length = parse_config(self.session.config['config_file'])[self.round_number-1]['subperiod_length']
         seconds_per_tick = parse_config(self.session.config['config_file'])[self.round_number-1]['seconds_per_tick']
-        period_length = num_subperiods * ((subperiod_length + rest_length) * seconds_per_tick)
-        return (
-            num_subperiods *
-            ((subperiod_length + rest_length) * seconds_per_tick)
-        )
+        period_length = num_subperiods * ((self.subperiod_length() + rest_length) * seconds_per_tick)
+        return period_length
 
     def when_all_players_ready(self):
         super().when_all_players_ready()
@@ -136,6 +132,8 @@ class Group(DecisionGroup):
                 'countGood': self.countGood,
                 'periodResult': self.periodResult,
                 'totalPayoffs': self.total_payoffs,
+                'seconds_per_tick': parse_config(self.session.config['config_file'])[self.round_number-1]['seconds_per_tick'],
+                'rest_length': parse_config(self.session.config['config_file'])[self.round_number-1]['rest_length'],
                 'subperiodLength': parse_config(self.session.config['config_file'])[self.round_number-1]['subperiod_length']
             }
             self.t += 1

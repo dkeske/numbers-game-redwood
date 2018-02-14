@@ -58,6 +58,8 @@ def get_output_table(events):
         'p1_avg_payoffs',
         'p2_avg_payoffs',
         'num_subperiods',
+        'seconds_per_tick',
+        'rest_length',
         'payoff_matrix(AGood, ABad, BGood, BBad)',
         'probability_matrix(AA, AB, BA, BB)'
     ]
@@ -69,7 +71,6 @@ def get_output_table(events):
     p2_code = p2.participant.code
     group = events[0].group
     prev_session_code = None
-    prev_subperiod = None
     prev_payoff = None
     prev_probability = None
     for event in events:
@@ -91,12 +92,13 @@ def get_output_table(events):
                 event.value['periodResult'][p2_code],
                 event.value['totalPayoffs'][p1_code]/event.value['subperiodLength'],
                 event.value['totalPayoffs'][p2_code]/event.value['subperiodLength'],
-                event.value['numSubperiods'] if event.value['numSubperiods'] != prev_subperiod else "",
+                event.value['numSubperiods'],
+                event.value['seconds_per_tick'],
+                event.value['rest_length'],
                 event.value['payoffMatrix'] if event.value['payoffMatrix'] != prev_payoff else "",
                 event.value['probabilityMatrix'] if event.value['probabilityMatrix'] != prev_probability else "",
             ])
             prev_session_code = copy.copy(group.session.code)
-            prev_subperiod = copy.copy(event.value['numSubperiods'])
             prev_payoff = copy.copy(event.value['payoffMatrix'])
             prev_probability = copy.copy(event.value['probabilityMatrix'])
 
