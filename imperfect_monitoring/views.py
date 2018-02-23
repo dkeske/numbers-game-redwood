@@ -75,7 +75,8 @@ def get_output_table(events):
     prev_probability = None
     for event in events:
         #print(dir(group))
-        if event.channel == 'tick' and 'pauseProgress' in event.value and event.value['pauseProgress'] == 0.5:
+        #print(dir(event))
+        if event.channel == 'tick' and 'pauseProgress' in event.value and event.value['pauseProgress'] == event.value['printTime']:
             rows.append([
                 event.timestamp,
                 group.session.code if group.session.code != prev_session_code else "",
