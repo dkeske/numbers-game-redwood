@@ -1,7 +1,9 @@
 from ._builtin import Page, WaitPage
 
 from datetime import timedelta
-
+from operator import concat
+from functools import reduce
+from .models import parse_config
 
 class Introduction(Page):
 
@@ -32,18 +34,38 @@ class Results(Page):
     def is_displayed(self):
         return self.round_number <= self.group.num_rounds()
 
+def get_config_columns(group):
+    payoffs = group.subsession.payoff_matrix()
+    payoffs = reduce(concat, payoffs)
+    num_subperiods = group.num_subperiods()
+    pure_strategy = group.subsession.pure_strategy()
+    config = parse_config(group.session.config['config_file'])
+    role_shuffle = config[group.round_number - 1]['shuffle_role']
+    return payoffs + [num_subperiods, pure_strategy, role_shuffle]
+
+output_table_header = [
+    'session_code',
+    'subsession_id',
+    'id_in_subsession',
+    'tick',
+    'p1_strategy',
+    'p2_strategy',
+    'p1_code',
+    'p2_code',
+    'payoff1Aa',
+    'payoff2Aa',
+    'payoff1Ab',
+    'payoff2Ab',
+    'payoff1Ba',
+    'payoff2Ba',
+    'payoff1Bb',
+    'payoff2Bb',
+    'num_subperiods',
+    'pure_strategy',
+    'role_shuffle',
+]
 
 def get_output_table(events):
-    header = [
-        'session_code',
-        'subsession_id',
-        'id_in_subsession',
-        'tick',
-        'p1_strategy',
-        'p2_strategy',
-        'p1_code',
-        'p2_code',
-    ]
     if not events:
         return [], []
     rows = []
@@ -53,6 +75,7 @@ def get_output_table(events):
     p1_code = p1.participant.code
     p2_code = p2.participant.code
     group = events[0].group
+    config_columns = get_config_columns(group)
     # sets sampling frequency for continuous time output
     ticks_per_second = 2
     if group.num_subperiods() == 0:
@@ -77,7 +100,7 @@ def get_output_table(events):
                 p2_decision,
                 p1_code,
                 p2_code,
-            ])
+            ] + config_columns)
     else:
         tick = 0
         for event in events:
@@ -91,9 +114,9 @@ def get_output_table(events):
                     event.value[p2_code],
                     p1_code,
                     p2_code,
-                ])
+                ] + config_columns)
                 tick += 1
-    return header, rows
+    return output_table_header, rows
 
 page_sequence = [
     Introduction,
