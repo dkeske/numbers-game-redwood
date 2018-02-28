@@ -373,6 +373,12 @@
                     return flowPayoff;
                 };
 
+                // if using pure strategy, set bot to only choose pure strategies
+                if (this.pureStrategy) {
+                    this.$.bot.lambda = 1;
+                    this.$.bot.pattern = true;
+                }
+
                 this._myPlannedDecisionString = new String(this.initialDecision);
             },
             _array(a, i) {
