@@ -8,13 +8,19 @@
 {% block content %}
 
     <table class="table" style="width:400px; margin-top:20px; margin-bottom:10px">
+        <th>
+            <td>Mix</td>
+            <td>Payoff</td>
+        </th>
         <tr>
-            <td>This round, you earned</td>
+            <td>Your</td>
+            <td>{{ my_avg_strategy | floatformat:2 }}</td>
             <td>{{ player.payoff }}</td>
         </tr>
         <tr>
-            <td>In total, you have earned</td>
-            <td>{{ player.participant.payoff }}</td>
+            <td>Average</td>
+            <td>{{ player_average_strategy | floatformat:2 }}</td>
+            <td>{{ player_average_payoff }}</td>
         </tr>
     </table>
 

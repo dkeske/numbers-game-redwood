@@ -42,6 +42,24 @@ def parse_config(config_file):
 
 class Subsession(BaseSubsession):
 
+    def get_average_strategy(self, row_player):
+        id_in_group = 1 if row_player else 2
+        players = [p for p in self.get_players() if p.id_in_group == id_in_group] 
+        sum_strategies = 0
+        for p in players:
+            sum_strategies += p.get_average_strategy()
+        return sum_strategies / len(players)
+    
+    def get_average_payoff(self, row_player):
+        id_in_group = 1 if row_player else 2
+        players = [p for p in self.get_players() if p.id_in_group == id_in_group] 
+        sum_payoffs = 0
+        for p in players:
+            if not p.payoff:
+                p.set_payoff()
+            sum_payoffs += p.payoff
+        return sum_payoffs / len(players)
+
     def before_session_starts(self):
         config = parse_config(self.session.config['config_file'])
         if self.round_number > len(config):
@@ -71,6 +89,28 @@ class Group(DecisionGroup):
 
 
 class Player(BasePlayer):
+
+    def get_average_strategy(self):
+        decisions = list(Event.objects.filter(
+                channel='group_decisions',
+                content_type=ContentType.objects.get_for_model(self.group),
+                group_pk=self.group.pk).order_by("timestamp"))
+        try:
+            period_end = Event.objects.get(
+                    channel='state',
+                    content_type=ContentType.objects.get_for_model(self.group),
+                    group_pk=self.group.pk,
+                    value='period_end').timestamp
+        except Event.DoesNotExist:
+            return float('nan')
+        # sum of all decisions weighted by the amount of time that decision was held
+        weighted_sum_decision = 0
+        while decisions:
+            cur_decision = decisions.pop(0)
+            next_time = decisions[0].timestamp if decisions else period_end
+            weighted_sum_decision += cur_decision.value[self.participant.code] * (next_time - cur_decision.timestamp).seconds
+        return weighted_sum_decision / self.group.period_length()
+
 
     def initial_decision(self):
         if self.subsession.pure_strategy():
