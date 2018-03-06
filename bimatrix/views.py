@@ -25,10 +25,11 @@ class Decision(Page):
     
 
 class Results(Page):
-    #timeout_seconds = 30
+    timeout_seconds = 30
 
     def vars_for_template(self):
-        self.player.set_payoff()
+        if not self.player.payoff:
+            self.player.set_payoff()
         my_avg_strategy = self.player.get_average_strategy()
         row_player = self.player.id_in_group == 1
         player_average_strategy = self.subsession.get_average_strategy(row_player)

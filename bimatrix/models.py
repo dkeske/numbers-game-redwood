@@ -107,8 +107,9 @@ class Player(BasePlayer):
         weighted_sum_decision = 0
         while decisions:
             cur_decision = decisions.pop(0)
-            next_time = decisions[0].timestamp if decisions else period_end
-            weighted_sum_decision += cur_decision.value[self.participant.code] * (next_time - cur_decision.timestamp).seconds
+            next_change_time = decisions[0].timestamp if decisions else period_end
+            decision_value = cur_decision.value[self.participant.code]
+            weighted_sum_decision += decision_value * (next_change_time - cur_decision.timestamp).total_seconds()
         return weighted_sum_decision / self.group.period_length()
 
 
