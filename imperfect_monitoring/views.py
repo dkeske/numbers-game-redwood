@@ -39,6 +39,16 @@ class Results(Page):
         self.player.set_payoff()
         return {}
 
+def get_config_columns(group):
+    config = parse_config(group.session.config['config_file'])
+    subperiod_length = config[group.round_number - 1]['subperiod_length']
+    num_subperiods = config[group.round_number - 1]['num_subperiods']
+    seconds_per_tick = config[group.round_number - 1]['seconds_per_tick']
+    rest_length = config[group.round_number - 1]['rest_length']
+    payoff_matrix = config[group.round_number - 1]['payoff_matrix']
+    probability_matrix = config[group.round_number - 1]['probability_matrix']
+
+    return [subperiod_length, num_subperiods, seconds_per_tick, rest_length, payoff_matrix, probability_matrix]
 
 def get_output_table(events):
     header = [
@@ -52,11 +62,11 @@ def get_output_table(events):
         'p2_action',
         'p1_countGood',
         'p2_countGood',
-        'subperiod_length',
         'p1_periodResult',
         'p2_periodResult',
         'p1_avg_payoffs',
         'p2_avg_payoffs',
+        'subperiod_length',
         'num_subperiods',
         'seconds_per_tick',
         'rest_length',
@@ -70,16 +80,12 @@ def get_output_table(events):
     p1_code = p1.participant.code
     p2_code = p2.participant.code
     group = events[0].group
-    prev_session_code = None
-    prev_payoff = None
-    prev_probability = None
+    config_columns = get_config_columns(group)
     for event in events:
-        #print(dir(group))
-        #print(dir(event))
         if event.channel == 'tick' and 'pauseProgress' in event.value and event.value['pauseProgress'] == event.value['printTime']:
             rows.append([
                 event.timestamp,
-                group.session.code if group.session.code != prev_session_code else "",
+                group.session.code,
                 group.subsession_id,
                 group.id_in_subsession,
                 p1_code,
@@ -88,20 +94,11 @@ def get_output_table(events):
                 event.value['fixedDecisions'][p2_code],
                 event.value['countGood'][p1_code],
                 event.value['countGood'][p2_code],
-                event.value['subperiodLength'],
                 event.value['periodResult'][p1_code],
                 event.value['periodResult'][p2_code],
-                event.value['totalPayoffs'][p1_code]/event.value['subperiodLength'],
-                event.value['totalPayoffs'][p2_code]/event.value['subperiodLength'],
-                event.value['numSubperiods'],
-                event.value['seconds_per_tick'],
-                event.value['rest_length'],
-                event.value['payoffMatrix'] if event.value['payoffMatrix'] != prev_payoff else "",
-                event.value['probabilityMatrix'] if event.value['probabilityMatrix'] != prev_probability else "",
-            ])
-            prev_session_code = copy.copy(group.session.code)
-            prev_payoff = copy.copy(event.value['payoffMatrix'])
-            prev_probability = copy.copy(event.value['probabilityMatrix'])
+                event.value['totalPayoffs'][p1_code]/parse_config(group.session.config['config_file'])[group.round_number-1]['subperiod_length'],
+                event.value['totalPayoffs'][p2_code]/parse_config(group.session.config['config_file'])[group.round_number-1]['subperiod_length']
+            ] + config_columns)
 
     rows.append("")
             
