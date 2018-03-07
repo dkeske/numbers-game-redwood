@@ -21,8 +21,14 @@ class Introduction(Page):
 class DecisionWaitPage(WaitPage):
     body_text = 'Waiting for all players to be ready'
 
+    def is_displayed(self):
+        return self.round_number <= self.group.num_rounds()
+
 
 class Decision(Page):
+
+    def is_displayed(self):
+        return self.round_number <= self.group.num_rounds()
 
     def vars_for_template(self):
         displayed_subperiods = parse_config(self.session.config['config_file'])[self.round_number-1]['displayed_subperiods'],
@@ -34,6 +40,9 @@ class Decision(Page):
 
 
 class Results(Page):
+
+    def is_displayed(self):
+        return self.round_number <= self.group.num_rounds()
 
     def vars_for_template(self):
         self.player.set_payoff()

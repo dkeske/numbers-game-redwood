@@ -19,7 +19,7 @@ a "sub-period" of time to digest the results and strategize.
 class Constants(BaseConstants):
     name_in_url = 'imperfect_monitoring'
     players_per_group = 2
-    num_rounds = 10
+    num_rounds = 100
 
 def parse_config(config_file):
     with open('imperfect_monitoring/configs/' + config_file) as f:
@@ -61,6 +61,9 @@ class Group(DecisionGroup):
     periodResult = JSONField()
     #num_sub = JSONField()
     fixed_group_decisions = JSONField()
+
+    def num_rounds(self):
+        return len(parse_config(self.session.config['config_file']))
 
     def subperiod_length(self):
         return parse_config(self.session.config['config_file'])[self.round_number-1]['subperiod_length']
