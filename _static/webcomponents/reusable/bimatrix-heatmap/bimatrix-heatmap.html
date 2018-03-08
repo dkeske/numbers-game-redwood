@@ -32,43 +32,67 @@
 				height: 104%;
 				right: 0;
 				top: -2%;
-				border-left: 2px solid black; }
+				border-left: 2px solid black;
+			}
+
+			#at-worst-container {
+				position: relative;
+				float: right;
+				width: 30px;
+				margin-top: 18px;
+			}
+
+			#at-worst {
+				position: absolute;
+				left: 10px;
+				text-align: center;
+				margin-bottom: -10px;
+			}
 
 		</style>
-
 		<div>
-			<span>
-				[[_arrayItem(payoffs.*, 0)]]
-			</span>
-			<span style="float: right">
-				[[_arrayItem(payoffs.*, 1)]]
-			</span>
-		</div>
-		<div
-			id="heatmap-container"
-			style$="width: [[size]]px; height: [[size]]px">
-			<canvas
-				id="canvas"
-				style$="width: [[size]]px; height: [[size]]px">
-			</canvas>
-			<div
-				id="my-val"
-				style$="height: [[_calcPercent(myDecision)]]">
+			<div style="float: left">
+				<div>
+					<span>
+						[[_arrayItem(payoffs.*, 0)]]
+					</span>
+					<span style="float: right">
+						[[_arrayItem(payoffs.*, 1)]]
+					</span>
+				</div>
+				<div
+					id="heatmap-container"
+					style$="width: [[size]]px; height: [[size]]px">
+					<canvas
+						id="canvas"
+						style$="width: [[size]]px; height: [[size]]px">
+					</canvas>
+					<div
+						id="my-val"
+						style$="height: [[_calcPercent(myDecision)]]">
+					</div>
+					<div
+						id="other-val"
+						style$="width: [[_calcPercent(otherDecision)]]">
+					</div>
+				</div>
+				<div>
+					<span>
+						[[_arrayItem(payoffs.*, 2)]]
+					</span>
+					<span style="float: right">
+						[[_arrayItem(payoffs.*, 3)]]
+					</span>
+				</div>
 			</div>
-			<div
-				id="other-val"
-				style$="width: [[_calcPercent(otherDecision)]]">
-			</div>
+			<template is="dom-if" if="{{ showAtWorst }}">
+				<div id="at-worst-container" style$="height: [[size]]px">
+					<div id="at-worst" style$="bottom: [[_calcPercent(myDecision)]]">
+						{{ _atWorst }}
+					</div>
+				</div>
+			</template>
 		</div>
-		<div>
-			<span>
-				[[_arrayItem(payoffs.*, 2)]]
-			</span>
-			<span style="float: right">
-				[[_arrayItem(payoffs.*, 3)]]
-			</span>
-		</div>
-
 	</template>
 
 	<script src="/static/general/color.js"></script>
@@ -87,6 +111,11 @@
 				color: {
 					type: String,
 					observer: 'make_heatmap',
+				},
+				showAtWorst: Boolean,
+				_atWorst: {
+					type: String,
+					computed: '_computeAtWorst(myDecision)',
 				},
 			},
 			// format a decision as a CSS percent value
@@ -145,6 +174,12 @@
 				}
 
 				ctx.putImageData(imageData, 0, 0);
+			},
+			_computeAtWorst(myDecision) {
+				const left = myDecision * this.get(['payoffs', 0]) + (1 - myDecision) * this.get(['payoffs', 2]);
+				const right = myDecision * this.get(['payoffs', 1]) + (1 - myDecision) * this.get(['payoffs', 3]);
+				const worst = Math.round(Math.min(left, right));
+				return isNaN(worst) ? '' : worst;
 			},
 		})
 	</script>

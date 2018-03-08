@@ -215,7 +215,8 @@
                                         my-decision="[[ myPlannedDecision ]]"
                                         other-decision="[[ otherDecision ]]"
                                         payoffs="[[ myPayoffs ]]"
-                                        color="[[ myColor ]]">
+                                        color="[[ myColor ]]"
+                                        show-at-worst="{{ showAtWorst }}">
                                     </bimatrix-heatmap>
                                 </div>
                             </div>
@@ -299,6 +300,10 @@
                 pureStrategy: {
                     type: Boolean,
                     value: false
+                },
+                showAtWorst: {
+                    type: Boolean,
+                    value: false,
                 },
                 myChoiceSeries: {
                     type: Array,
