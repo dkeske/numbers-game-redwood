@@ -75,6 +75,7 @@
             }
 
             .slider-container {
+                margin-top: 13px;
                 width: 50px;
                 height: 315px;
             }
@@ -200,7 +201,7 @@
                                     payoffs="[[ otherPayoffs ]]"
                                     color="[[ otherColor ]]">
                                 </bimatrix-heatmap>
-                                <div id="your-heatmap" class="layout horizontal center">
+                                <div id="your-heatmap" class="layout horizontal start">
                                     <div class="slider-container">
                                         <styled-range
                                             min="0"
@@ -216,7 +217,8 @@
                                         other-decision="[[ otherDecision ]]"
                                         payoffs="[[ myPayoffs ]]"
                                         color="[[ myColor ]]"
-                                        show-at-worst="{{ showAtWorst }}">
+                                        show-at-worst="{{ showAtWorst }}"
+                                        show-best-response="{{ showBestResponse }}">
                                     </bimatrix-heatmap>
                                 </div>
                             </div>
@@ -302,6 +304,10 @@
                     value: false
                 },
                 showAtWorst: {
+                    type: Boolean,
+                    value: false,
+                },
+                showBestResponse: {
                     type: Boolean,
                     value: false,
                 },

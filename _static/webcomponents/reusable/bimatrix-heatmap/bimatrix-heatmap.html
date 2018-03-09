@@ -39,7 +39,7 @@
 				position: relative;
 				float: right;
 				width: 30px;
-				margin-top: 18px;
+				margin-top: 20px;
 			}
 
 			#at-worst {
@@ -49,10 +49,23 @@
 				margin-bottom: -10px;
 			}
 
+			#best-response-container {
+				position: relative;
+				height: 30px;
+				clear: left;
+			}
+
+			#best-response {
+				position: absolute;
+				text-align: center;
+				width: 10px;
+				margin-right: -6px;
+			}
+
 		</style>
 		<div>
 			<div style="float: left">
-				<div>
+				<div style="height: 20px">
 					<span>
 						[[_arrayItem(payoffs.*, 0)]]
 					</span>
@@ -76,7 +89,7 @@
 						style$="width: [[_calcPercent(otherDecision)]]">
 					</div>
 				</div>
-				<div>
+				<div style="height: 20px">
 					<span>
 						[[_arrayItem(payoffs.*, 2)]]
 					</span>
@@ -89,6 +102,13 @@
 				<div id="at-worst-container" style$="height: [[size]]px">
 					<div id="at-worst" style$="bottom: [[_calcPercent(myDecision)]]">
 						{{ _atWorst }}
+					</div>
+				</div>
+			</template>
+			<template is="dom-if" if="{{ showBestResponse }}">
+				<div id="best-response-container" style$="width: [[size]]px">
+					<div id="best-response" style$="right: [[_calcPercent(otherDecision)]]">
+						{{ _bestResponse }}
 					</div>
 				</div>
 			</template>
@@ -113,10 +133,15 @@
 					observer: 'make_heatmap',
 				},
 				showAtWorst: Boolean,
+				showBestResponse: Boolean,
 				_atWorst: {
-					type: String,
+					type: Number,
 					computed: '_computeAtWorst(myDecision)',
 				},
+				_bestResponse: {
+					type: Number,
+					computed: '_computeBestResponse(otherDecision)',
+				}
 			},
 			// format a decision as a CSS percent value
 			_calcPercent(decision) {
@@ -180,6 +205,11 @@
 				const right = myDecision * this.get(['payoffs', 1]) + (1 - myDecision) * this.get(['payoffs', 3]);
 				const worst = Math.round(Math.min(left, right));
 				return isNaN(worst) ? '' : worst;
+			},
+			_computeBestResponse(otherDecision) {
+				const top = otherDecision * this.get(['payoffs', 0]) + (1 - otherDecision) * this.get(['payoffs', 1]);
+				const bottom = otherDecision * this.get(['payoffs', 2]) + (1 - otherDecision) * this.get(['payoffs', 3]);
+				return top > bottom ? 1 : 0;
 			},
 		})
 	</script>

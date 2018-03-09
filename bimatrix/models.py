@@ -33,6 +33,7 @@ def parse_config(config_file):
             'num_subperiods': int(row['num_subperiods']),
             'pure_strategy': True if row['pure_strategy'] == 'TRUE' else False,
             'show_at_worst': True if row['show_at_worst'] == 'TRUE' else False,
+            'show_best_response': True if row['show_best_response'] == 'TRUE' else False,
             'payoff_matrix': [
                 [int(row['payoff1Aa']), int(row['payoff2Aa'])], [int(row['payoff1Ab']), int(row['payoff2Ab'])],
                 [int(row['payoff1Ba']), int(row['payoff2Ba'])], [int(row['payoff1Bb']), int(row['payoff2Bb'])]
@@ -78,6 +79,9 @@ class Subsession(BaseSubsession):
     
     def show_at_worst(self):
         return parse_config(self.session.config['config_file'])[self.round_number-1]['show_at_worst']
+
+    def show_best_response(self):
+        return parse_config(self.session.config['config_file'])[self.round_number-1]['show_best_response']
 
 
 class Group(DecisionGroup):
