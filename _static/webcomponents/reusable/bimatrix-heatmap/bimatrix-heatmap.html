@@ -58,8 +58,8 @@
 			#best-response {
 				position: absolute;
 				text-align: center;
-				width: 10px;
-				margin-right: -6px;
+				width: 20px;
+				margin-right: -10px;
 			}
 
 		</style>
@@ -209,7 +209,8 @@
 			_computeBestResponse(otherDecision) {
 				const top = otherDecision * this.get(['payoffs', 0]) + (1 - otherDecision) * this.get(['payoffs', 1]);
 				const bottom = otherDecision * this.get(['payoffs', 2]) + (1 - otherDecision) * this.get(['payoffs', 3]);
-				return top > bottom ? 1 : 0;
+				const best = Math.round(Math.max(top, bottom));
+				return isNaN(best) ? '' : best;
 			},
 		})
 	</script>
