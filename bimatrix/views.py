@@ -30,14 +30,10 @@ class Results(Page):
     def vars_for_template(self):
         if not self.player.payoff:
             self.player.set_payoff()
-        my_avg_strategy = self.player.get_average_strategy()
         row_player = self.player.id_in_group == 1
-        player_average_strategy = self.subsession.get_average_strategy(row_player)
-        player_average_payoff = self.subsession.get_average_payoff(row_player)
         return {
-            'my_avg_strategy': my_avg_strategy,
-            'player_average_strategy': player_average_strategy,
-            'player_average_payoff': player_average_payoff,
+            'player_average_strategy': self.subsession.get_average_strategy(row_player),
+            'player_average_payoff': self.subsession.get_average_payoff(row_player),
         }
 
     def is_displayed(self):
