@@ -28,8 +28,13 @@ class Results(Page):
     timeout_seconds = 30
 
     def vars_for_template(self):
-        self.player.set_payoff()
-        return {}
+        if not self.player.payoff:
+            self.player.set_payoff()
+        row_player = self.player.id_in_group == 1
+        return {
+            'player_average_strategy': self.subsession.get_average_strategy(row_player),
+            'player_average_payoff': self.subsession.get_average_payoff(row_player),
+        }
 
     def is_displayed(self):
         return self.round_number <= self.group.num_rounds()

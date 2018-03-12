@@ -36,11 +36,18 @@
         initial-decision='{{ player.initial_decision }}'
         payoff-matrix='{{ player.subsession.payoff_matrix }}'
         period-length='{{ player.group.period_length }}'
+        rate-limit='{{ player.subsession.rate_limit }}'
         {% if player.group.num_subperiods %}
         num-subperiods='{{ player.group.num_subperiods }}'
         {% endif %}
         {% if player.subsession.pure_strategy %}
         pure-strategy
+        {% endif %}
+        {% if player.subsession.show_at_worst %}
+        show-at-worst
+        {% endif %}
+        {% if player.subsession.show_best_response %}
+        show-best-response
         {% endif %}
         >
     </leeps-bimatrix>
