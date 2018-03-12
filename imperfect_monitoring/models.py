@@ -59,7 +59,7 @@ class Group(DecisionGroup):
     total_payoffs = JSONField()
     countGood = JSONField()
     periodResult = JSONField()
-    #num_sub = JSONField()
+    num_sub = JSONField()
     fixed_group_decisions = JSONField()
 
     def num_rounds(self):
@@ -83,21 +83,8 @@ class Group(DecisionGroup):
     def period_length(self):
         rest_length = parse_config(self.session.config['config_file'])[self.round_number-1]['rest_length']
         seconds_per_tick = parse_config(self.session.config['config_file'])[self.round_number-1]['seconds_per_tick']
-        num_sub = parse_config(self.session.config['config_file'])[self.round_number-1]['num_subperiods']
-        period_length = (num_sub * ((self.subperiod_length() + rest_length) * seconds_per_tick))
-        print(num_sub, self.subperiod_length(), rest_length, seconds_per_tick)
-        print(period_length)
+        period_length = (self.num_sub * ((self.subperiod_length() + rest_length) * seconds_per_tick))
         return period_length
-
-    # def period_length(self):
-    #     rest_length = parse_config(self.session.config['config_file'])[self.round_number-1]['rest_length']
-    #     subp_length = self.subperiod_length()
-    #     seconds_per_tick = parse_config(self.session.config['config_file'])[self.round_number-1]['seconds_per_tick']
-    #     num_sub = seconds_per_tick = parse_config(self.session.config['config_file'])[self.round_number-1]['num_subperiods']
-
-    #     print(rest_length, subp_length, num_sub)
-
-    #     return num_sub * (rest_length + subp_length) * seconds_per_tick
 
     def when_all_players_ready(self):
         super().when_all_players_ready()
@@ -108,10 +95,10 @@ class Group(DecisionGroup):
         self.periodResult = {}
         self.fixed_group_decisions = {}
 
-        # if parse_config(self.session.config['config_file'])[self.round_number-1]['num_subperiods'] == 0:
-        #     self.num_sub = random.randrange(5, 20)
-        # else:
-        #     self.num_sub = parse_config(self.session.config['config_file'])[self.round_number-1]['num_subperiods']
+        if parse_config(self.session.config['config_file'])[self.round_number-1]['num_subperiods'] == 0:
+            self.num_sub = random.randrange(5, 20)
+        else:
+            self.num_sub = parse_config(self.session.config['config_file'])[self.round_number-1]['num_subperiods']
 
         for i, player in enumerate(self.get_players()):
             self.total_payoffs[player.participant.code] = 0
@@ -119,8 +106,6 @@ class Group(DecisionGroup):
             self.periodResult[player.participant.code] = ""
             self.fixed_group_decisions[player.participant.code] = 0
         self.save()
-
-        #print(parse_config(self.session.config['config_file'])[self.round_number-1]['seconds_per_tick'], self.period_length())
 
         emitter = DiscreteEventEmitter(
             parse_config(self.session.config['config_file'])[self.round_number-1]['seconds_per_tick'], self.period_length(), self, self.tick)
@@ -146,6 +131,7 @@ class Group(DecisionGroup):
                 self.state = 'pause'
                 self.t = 0
         elif self.state == 'pause':
+            print()
             msg = {
                 'pauseProgress': (self.t+1)/parse_config(self.session.config['config_file'])[self.round_number-1]['rest_length'],
                 'printTime': (parse_config(self.session.config['config_file'])[self.round_number-1]['rest_length']-1)/
@@ -155,6 +141,7 @@ class Group(DecisionGroup):
                 'countGood': self.countGood,
                 'periodResult': self.periodResult,
                 'totalPayoffs': self.total_payoffs,
+                'numSubperiods': self.num_sub
             }
             self.t += 1
             if self.t == parse_config(self.session.config['config_file'])[self.round_number-1]['rest_length']:
@@ -213,7 +200,6 @@ class Group(DecisionGroup):
                     payoff_index = 2
                     self.countGood[player.participant.code] += 1
                     self.periodResult[player.participant.code] += "G"
-            #print(self.periodResult)
             realized_payoffs[player.participant.code] = payoffs[payoff_index]
             self.total_payoffs[player.participant.code] += realized_payoffs[player.participant.code]
 

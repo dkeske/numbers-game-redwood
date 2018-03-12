@@ -51,13 +51,12 @@ class Results(Page):
 def get_config_columns(group):
     config = parse_config(group.session.config['config_file'])
     subperiod_length = config[group.round_number - 1]['subperiod_length']
-    num_subperiods = config[group.round_number - 1]['num_subperiods']
     seconds_per_tick = config[group.round_number - 1]['seconds_per_tick']
     rest_length = config[group.round_number - 1]['rest_length']
     payoff_matrix = config[group.round_number - 1]['payoff_matrix']
     probability_matrix = config[group.round_number - 1]['probability_matrix']
 
-    return [subperiod_length, num_subperiods, seconds_per_tick, rest_length, payoff_matrix, probability_matrix]
+    return [subperiod_length, seconds_per_tick, rest_length, payoff_matrix, probability_matrix]
 
 def get_output_table(events):
     header = [
@@ -75,8 +74,8 @@ def get_output_table(events):
         'p2_periodResult',
         'p1_avg_payoffs',
         'p2_avg_payoffs',
-        'subperiod_length',
         'num_subperiods',
+        'subperiod_length',
         'seconds_per_tick',
         'rest_length',
         'payoff_matrix(AGood, ABad, BGood, BBad)',
@@ -106,7 +105,8 @@ def get_output_table(events):
                 event.value['periodResult'][p1_code],
                 event.value['periodResult'][p2_code],
                 event.value['totalPayoffs'][p1_code]/parse_config(group.session.config['config_file'])[group.round_number-1]['subperiod_length'],
-                event.value['totalPayoffs'][p2_code]/parse_config(group.session.config['config_file'])[group.round_number-1]['subperiod_length']
+                event.value['totalPayoffs'][p2_code]/parse_config(group.session.config['config_file'])[group.round_number-1]['subperiod_length'],
+                event.value['numSubperiods']
             ] + config_columns)
 
     rows.append("")
