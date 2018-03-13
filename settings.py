@@ -161,7 +161,7 @@ SESSION_CONFIGS = [
         'display_name': "Stochastic Bimatrix Game",
         'num_demo_participants': 2,
         'app_sequence': ['stochastic_bimatrix', 'payment_info'],
-        'treatment': 'A'
+        'config_file': 'demo.csv'
     },
     {
         'name': 'continuous_double_auction',
@@ -174,17 +174,3 @@ SESSION_CONFIGS = [
 # anything you put after the below line will override
 # oTree's default settings. Use with caution.
 otree.settings.augment_settings(globals())
-
-LOGGING_CONFIG = None
-LOGGING['handlers']['console']['class'] = 'logging.NullHandler'
-LOGGING['handlers']['console_debug'] = {
-    'level': 'DEBUG',
-    'class': 'logging.StreamHandler',
-    'formatter': 'verbose',
-}
-LOGGING['loggers']['otree_redwood'] = {
-    'level': 'DEBUG',
-    'handlers': ['console_debug'],
-}
-import logging.config
-logging.config.dictConfig(LOGGING)

@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 from ._builtin import Page, WaitPage
-from .models import Constants, Player, treatment
+from .models import Constants, Player, parse_config
 
 from datetime import timedelta
 
 
 def vars_for_all_templates(self):
-    payoff_grid = treatment(self.session)['payoff_grid']
-    transition_probabilities = treatment(self.session)['transition_probabilities']
+    payoff_grid = parse_config(self.session.config['config_file'])[self.round_number-1]['payoff_grid']
+    transition_probabilities = parse_config(self.session.config['config_file'])[self.round_number-1]['transition_probabilities']
 
     return locals()
 
@@ -22,19 +22,28 @@ class Introduction(Page):
 class DecisionWaitPage(WaitPage):
     body_text = 'Waiting for all players to be ready'
 
+    def is_displayed(self):
+        return self.round_number <= self.group.num_rounds()
+
 
 class Decision(Page):
 
     def vars_for_template(self):
         return {}
 
+    def is_displayed(self):
+        return self.round_number <= self.group.num_rounds()
+
 
 class Results(Page):
     timeout_seconds = 30
-    
+
     def vars_for_template(self):
         self.player.set_payoff()
         return {}
+
+    def is_displayed(self):
+        return self.round_number <= self.group.num_rounds()
 
 
 def get_output_table(events):

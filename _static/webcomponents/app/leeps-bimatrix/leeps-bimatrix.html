@@ -208,7 +208,8 @@
                                             max="1"
                                             step="0.01"
                                             disabled="[[ !_isPeriodRunning ]]"
-                                            value="{{ myPlannedDecision }}">
+                                            value="{{ myPlannedDecision }}"
+                                            rate-limit="[[ rateLimit ]]">
                                         </styled-range>
                                     </div>
                                     <bimatrix-heatmap
@@ -310,6 +311,9 @@
                 showBestResponse: {
                     type: Boolean,
                     value: false,
+                },
+                rateLimit: {
+                    type: Number,
                 },
                 myChoiceSeries: {
                     type: Array,
