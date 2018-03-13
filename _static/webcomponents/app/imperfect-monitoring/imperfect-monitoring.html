@@ -322,17 +322,7 @@
                         this.historyGraph.series[0].addPoint(
                             this.currSubperiodGraph.series[0].data[i].y);
                     }
-                    
-                    this.historyGraph.series[1].addPoint([this.historyGraph.series[0].data.length - this.subperiodLength -.3, this.currSubperiodGraph.series[1].data[0].y])
-                    this.historyGraph.series[1].addPoint([this.historyGraph.series[0].data.length -.5, this.currSubperiodGraph.series[1].data[0].y])
-                    
-                    // Add horizontal plot lines to the history graph.
-                    this.historyGraph.xAxis[0].addPlotLine({
-                        value: this.historyGraph.series[0].data.length-.3,
-                        zIndex: 10,
-                        width: 2,
-                        color: 'black'
-                    });
+                    const avg = this.currSubperiodGraph.series[1].data[0].y
                     this.historyGraph.xAxis[0].update({
                         reversed: true
                     });
@@ -345,6 +335,7 @@
                     for (let i = 0; i < 2; i++) {
                         const series = this.currSubperiodGraph.series[2];
                         const color = series.color;
+                        console.log(color);
                         const data = [];
                         for (let j = 0; j < series.data.length; j++) {
                             data.push([subperiodStart + series.data[j].x, series.data[j].y]);
@@ -356,12 +347,25 @@
                             lineWidth: 10,
                             data: data,
                         });
+
                         const displayedSubperiods = this.displayedSubperiods == 0 ? 10 : this.displayedSubperiods;
                         const xmax = data[data.length-1][0];
                         const max = xmax + this.subperiodLength;
                         const min = max - (displayedSubperiods * this.subperiodLength) + 1;
                         this.historyGraph.xAxis[0].setExtremes(min, max);
                     }
+
+                    // Update the average line
+                    this.historyGraph.series[1].addPoint([this.historyGraph.series[0].data.length - this.subperiodLength -.3, avg]);
+                    this.historyGraph.series[1].addPoint([this.historyGraph.series[0].data.length -.5, avg]);
+
+                    // Add horizontal plot lines to the history graph.
+                    this.historyGraph.xAxis[0].addPlotLine({
+                        value: this.historyGraph.series[0].data.length-.3,
+                        zIndex: 10,
+                        width: 2,
+                        color: 'black'
+                    });
                 }
                 if (msg.hasOwnProperty('pauseProgress')) {
                     this.hideProgress = false;
