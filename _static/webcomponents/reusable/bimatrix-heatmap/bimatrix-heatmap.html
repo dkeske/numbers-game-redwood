@@ -42,6 +42,14 @@
 				margin-top: 20px;
 			}
 
+			#at-worst-label {
+				position: absolute;
+				right: 10px;
+				top: -40px;
+				width: 100px;
+				text-align: right;
+			}
+
 			#at-worst {
 				position: absolute;
 				left: 10px;
@@ -100,6 +108,11 @@
 			</div>
 			<template is="dom-if" if="{{ showAtWorst }}">
 				<div id="at-worst-container" style$="height: [[size]]px">
+					<div id="at-worst-label">
+						<span style="vertical-align: text-top">At Worst</span>
+						<!-- &#8628; is RIGHTWARDS ARROW WITH CORNER DOWNWARDS -->
+						<font size="5" style="vertical-align: top">&#8628;</font>
+					</div>
 					<div id="at-worst" style$="bottom: [[_calcPercent(myDecision)]]">
 						{{ _atWorst }}
 					</div>
