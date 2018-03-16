@@ -42,13 +42,18 @@ class Results(Page):
         return self.round_number <= self.group.num_rounds()
 
 def get_config_columns(group):
-    payoffs = group.subsession.payoff_matrix()
+    config = parse_config(group.session.config['config_file'])[group.round_number - 1]
+    payoffs = config['payoff_matrix']
     payoffs = reduce(concat, payoffs)
-    num_subperiods = group.num_subperiods()
-    pure_strategy = group.subsession.pure_strategy()
-    config = parse_config(group.session.config['config_file'])
-    role_shuffle = config[group.round_number - 1]['shuffle_role']
-    return payoffs + [num_subperiods, pure_strategy, role_shuffle]
+
+    return payoffs + [
+        config['num_subperiods'],
+        config['pure_strategy'],
+        config['shuffle_role'],
+        config['show_at_worst'],
+        config['show_best_response'],
+        config['rate_limit'],
+    ]
 
 output_table_header = [
     'session_code',
@@ -70,6 +75,9 @@ output_table_header = [
     'num_subperiods',
     'pure_strategy',
     'role_shuffle',
+    'show_at_worst',
+    'show_best_response',
+    'rate_limit',
 ]
 
 def get_output_table(events):
