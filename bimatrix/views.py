@@ -14,6 +14,8 @@ class Introduction(Page):
 class DecisionWaitPage(WaitPage):
     body_text = 'Waiting for all players to be ready'
 
+    wait_for_all_groups = True
+
     def is_displayed(self):
         return self.round_number <= self.group.num_rounds()
 
@@ -40,39 +42,48 @@ class Results(Page):
         return self.round_number <= self.group.num_rounds()
 
 def get_config_columns(group):
-    payoffs = group.subsession.payoff_matrix()
+    config = parse_config(group.session.config['config_file'])[group.round_number - 1]
+    payoffs = config['payoff_matrix']
     payoffs = reduce(concat, payoffs)
-    num_subperiods = group.num_subperiods()
-    pure_strategy = group.subsession.pure_strategy()
-    config = parse_config(group.session.config['config_file'])
-    role_shuffle = config[group.round_number - 1]['shuffle_role']
-    return payoffs + [num_subperiods, pure_strategy, role_shuffle]
 
-output_table_header = [
-    'session_code',
-    'subsession_id',
-    'id_in_subsession',
-    'tick',
-    'p1_strategy',
-    'p2_strategy',
-    'p1_code',
-    'p2_code',
-    'payoff1Aa',
-    'payoff2Aa',
-    'payoff1Ab',
-    'payoff2Ab',
-    'payoff1Ba',
-    'payoff2Ba',
-    'payoff1Bb',
-    'payoff2Bb',
-    'num_subperiods',
-    'pure_strategy',
-    'role_shuffle',
-]
+    return payoffs + [
+        config['num_subperiods'],
+        config['pure_strategy'],
+        config['shuffle_role'],
+        config['show_at_worst'],
+        config['show_best_response'],
+        config['rate_limit'],
+    ]
+
+def get_output_table_header():
+    return [
+        'session_code',
+        'subsession_id',
+        'id_in_subsession',
+        'tick',
+        'p1_strategy',
+        'p2_strategy',
+        'p1_code',
+        'p2_code',
+        'payoff1Aa',
+        'payoff2Aa',
+        'payoff1Ab',
+        'payoff2Ab',
+        'payoff1Ba',
+        'payoff2Ba',
+        'payoff1Bb',
+        'payoff2Bb',
+        'num_subperiods',
+        'pure_strategy',
+        'role_shuffle',
+        'show_at_worst',
+        'show_best_response',
+        'rate_limit',
+    ]
 
 def get_output_table(events):
     if not events:
-        return [], []
+        return []
     rows = []
     minT = min(e.timestamp for e in events if e.channel == 'state')
     maxT = max(e.timestamp for e in events if e.channel == 'state')
@@ -121,7 +132,7 @@ def get_output_table(events):
                     p2_code,
                 ] + config_columns)
                 tick += 1
-    return output_table_header, rows
+    return rows
 
 page_sequence = [
     Introduction,

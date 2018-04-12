@@ -58,8 +58,8 @@ def get_config_columns(group):
 
     return [subperiod_length, seconds_per_tick, rest_length, payoff_matrix, probability_matrix]
 
-def get_output_table(events):
-    header = [
+def get_output_table_header():
+    return [
         'timestamp_of_start',
         'session_ID',
         'period_id',
@@ -81,8 +81,10 @@ def get_output_table(events):
         'payoff_matrix(AGood, ABad, BGood, BBad)',
         'probability_matrix(AA, AB, BA, BB)'
     ]
+
+def get_output_table(events):
     if not events:
-        return [], []
+        return []
     rows = []
     p1, p2 = events[0].group.get_players()
     p1_code = p1.participant.code
@@ -111,7 +113,7 @@ def get_output_table(events):
 
     rows.append("")
             
-    return header, rows
+    return rows
 
 page_sequence = [
         Introduction,
