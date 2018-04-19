@@ -58,16 +58,21 @@
 
             #decision {
                 margin-top: 10px;
+                margin-bottom: 10px;
                 align-self: center;
             }
 
-            .btn-warning, .btn-warning:hover, .btn-warning:focus, .btn-warning:disabled{
-                color: #fff;
+            #buttonA {
+                background-color: grey;
             }
 
-            .btn-warning:not(:disabled):not(.disabled):active, .btn-warning:not(:disabled):not(.disabled).active,
-.show > .btn-warning.dropdown-toggle{
-                color: #fff;
+            #buttonB {
+                color: white;
+                background-color: grey;
+            }
+
+            .btn.focus, .btn:focus {
+                box-shadow: None;
             }
         </style>
     
@@ -80,6 +85,11 @@
             channel="tick"
             on-event="_onTick">
         </redwood-channel>
+
+        <!--<div id="pointsAndParameters">
+            <div id="pointsChart">Current Points</div>
+            <div id="paramChart"> Parameter Values</div>
+        </div>-->
 
         <div id="progressAndGraphs">
             <progress
@@ -118,6 +128,50 @@
                 Don't Contribute
             </button>
         </div>
+
+        <table class="table table-bordered text-center" style="width: auto; margin: auto">
+    <tbody><tr>
+        <th colspan="2" rowspan="2"></th>
+        <th colspan="2">Probability of Bad Signal</th>
+    </tr>
+    <tr>
+        <th>Good</th>
+        <th>Bad</th>
+    </tr>
+    <tr>
+        <th rowspan="2"><span class="rotate90">You</span></th>
+        <th>A</th>
+        <td>'100.0', 0.0</td>
+        <td>'125.0', 25.0</td>
+    </tr>
+    <tr>
+        <th>B</th>
+        <td>100.0, 0.0</td>
+        <td>125.0, 25.0</td>
+    </tr>
+</tbody></table>
+
+<table class="table table-bordered text-center" style="width: auto; margin: auto">
+    <tbody><tr>
+        <th colspan="2" rowspan="2"></th>
+        <th colspan="2">Payoff by Signal</th>
+    </tr>
+    <tr>
+        <th>Good</th>
+        <th>Bad</th>
+    </tr>
+    <tr>
+        <th rowspan="2"><span class="rotate90">You</span></th>
+        <th>A</th>
+        <td>'100.0', 0.0</td>
+        <td>'125.0', 25.0</td>
+    </tr>
+    <tr>
+        <th>B</th>
+        <td>100.0, 0.0</td>
+        <td>125.0, 25.0</td>
+    </tr>
+</tbody></table>
     
     </template>
 
@@ -252,6 +306,16 @@
                 if (msg.hasOwnProperty('fixedDecisions')) {
                     this.fixedDecision = msg.fixedDecisions[oTree.participantCode];
                 }
+                // update decision button colors
+                var buttonA = document.getElementById("buttonA").style;
+                var buttonB = document.getElementById("buttonB").style;
+                if (this.fixedDecision == 1){
+                    buttonA.backgroundColor = "green";
+                    buttonB.backgroundColor = "gray";
+                }else if (this.fixedDecision == 0){
+                    buttonA.backgroundColor = "gray";
+                    buttonB.backgroundColor = "orange";
+                }
                 if (msg.realizedPayoffs) {
                     // Add realized payoffs to the current subperiod graph.
                     this._addRealizedPayoff(
@@ -335,7 +399,6 @@
                     for (let i = 0; i < 2; i++) {
                         const series = this.currSubperiodGraph.series[2];
                         const color = series.color;
-                        console.log(color);
                         const data = [];
                         for (let j = 0; j < series.data.length; j++) {
                             data.push([subperiodStart + series.data[j].x, series.data[j].y]);
@@ -381,6 +444,17 @@
                 event.preventDefault();
                 var d = parseFloat(event.target.value);
                 this.myDecision = d;
+
+                // change the borders for the selected option
+                var buttonA = document.getElementById("buttonA").style;
+                var buttonB = document.getElementById("buttonB").style;
+                if (d == 1){
+                    buttonA.border = "thick solid #99c199";
+                    buttonB.border = "None";
+                }else if (d == 0){
+                    buttonA.border = "None";
+                    buttonB.border = "thick solid #ffc199";
+                }
             },
             // sets up current subperiod graph
             _setupCurrSubperiodGraph() {
@@ -393,6 +467,12 @@
                         width: 150
                     },
                     title: { text: null },
+                    // title: { text: "Current Subperiod",
+                    //          margin: 100,
+                    //          style: { color: "blue"
+
+                    //          }
+                    //  },
                     exporting: { enabled: false },
                     tooltip: { enabled: false },
                     legend: { enabled: false },

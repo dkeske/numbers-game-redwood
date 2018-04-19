@@ -131,7 +131,6 @@ class Group(DecisionGroup):
                 self.state = 'pause'
                 self.t = 0
         elif self.state == 'pause':
-            print()
             msg = {
                 'pauseProgress': (self.t+1)/parse_config(self.session.config['config_file'])[self.round_number-1]['rest_length'],
                 'printTime': (parse_config(self.session.config['config_file'])[self.round_number-1]['rest_length']-1)/
