@@ -1,0 +1,98 @@
+{% extends "global/Page.html" %}
+{% load staticfiles otree %}
+
+{% block title %}
+Numbers Game
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var oTree = oTree || {};
+    (function () {
+        oTree.group = parseInt("{{ player.group.pk }}");
+        oTree.group = isNaN(oTree.group) ? null : oTree.group;
+        oTree.role = "{{ player.role }}";
+        oTree.participantCode = "{{ player.participant.code }}";
+        oTree.appName = "{{ subsession.app_name }}";
+        oTree.idInGroup = "{{ player.id_in_group }}";
+        oTree.csrfToken = "{{ csrf_token }}";
+        {%if view.is_debug %}
+        oTree.debug = true;
+        {% else %}
+        oTree.debug = false;
+        {% endif %}
+    })();
+</script>
+<link rel="import" href="/static/otree-redwood/webcomponents/redwood-channel/redwood-channel.html">
+
+<script>
+    // some fake order we're going to send when the button is clicked
+
+    var decisionChan = document.getElementById('decisionChannel');
+
+    // send the order out
+    document.getElementById("decisionButton").addEventListener("click", function (event) {
+        event.preventDefault();
+        var chosen_num = $("#id_chosen_number").val();
+        var playerDecision = {
+            'chosen_num': chosen_num,
+            'oTree': oTree
+        };
+        decisionChan.send(playerDecision);
+    });
+
+
+    // receive orders from the server
+    decisionChan.addEventListener('event', function (event) {
+        console.log("From channel start:");
+        console.log(event.detail.channel); // "decisions"
+        console.log(event.detail.timestamp); //undefined
+        console.log(event.detail.payload); // fakeDecision, above
+        console.log("From channel end.");
+        var sender_oTree = event.detail.payload.oTree;
+        var sender_chosen_num = event.detail.payload.chosen_num;
+        var group_policy = event.detail.payload.group_policy;
+        console.log("id in group: " + sender_oTree.idInGroup);
+        console.log("sender number " + sender_chosen_num);
+        $('#td_player'+sender_oTree.idInGroup).html(sender_chosen_num);
+        $('#td_group_policy').html(group_policy);
+    });
+</script>
+
+{% endblock %}
+
+{% block content %}
+
+<p>The number you have been assigned is {{player.assigned_number}}. You want the end policy to be close to this
+    number.
+</p>
+
+{% if group_policy %}
+<p>The current group policy is <strong>{{group_policy}}</strong>.</p>
+{% endif %}
+
+<table id="table_chosen_numbers">
+    <tr>
+        <th>Round number</th>
+        {% for player_id in player_ids %}
+        <th>Player {{player_id}}</th>
+        {% endfor %}
+        <th>Group policy</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        {% for player_id in player_ids %}
+        <td id="td_player{{player_id}}"></td>
+        {% endfor %}
+        <td id="td_group_policy"></td>
+    </tr>
+</table>
+
+
+<redwood-channel id="decisionChannel" channel="decision"></redwood-channel>
+
+{% formfield player.chosen_number label="Choose a number" %}
+
+<button id="decisionButton" type="button" class="btn btn-primary">Send Decision</button>
+
+{% endblock %}

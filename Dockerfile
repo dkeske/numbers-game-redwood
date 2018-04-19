@@ -1,4 +1,5 @@
-FROM python:3.4
+#FROM alpine
+FROM python:3.6
 
 # Force stdio/out/err to be unbuffered - we want to see errors pronto.
 ENV PYTHONUNBUFFERED 1

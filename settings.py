@@ -169,6 +169,14 @@ SESSION_CONFIGS = [
         'num_demo_participants': 2,
         'app_sequence': ['continuous_double_auction', 'payment_info'],
     },
+    {
+        'name': 'numbers_game',
+        'display_name': "Numbers Game",
+        'num_demo_participants': 3,
+        'app_sequence': ['numbers_game'],
+        'use_browser_bots': False,
+    },
+
 ]
 
 # anything you put after the below line will override

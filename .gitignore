@@ -10,3 +10,5 @@ _static_root
 _bots*s
 .vscode
 .~lock.*
+__temp_static_root
+venv_otree

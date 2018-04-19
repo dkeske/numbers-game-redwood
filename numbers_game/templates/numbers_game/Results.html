@@ -1,0 +1,31 @@
+{% extends "global/Page.html" %}
+{% load staticfiles otree %}
+
+{% block title %}
+    Results
+{% endblock %}
+
+{% block content %}
+    <table>
+        <tr>
+            <th>Player ID</th>
+            <th>Assigned number</th>
+            <th>Chosen number</th>
+        </tr>
+    {% for p in group.get_players %}
+    <!--TODO Do this for all rounds all players-->
+        <tr>
+            <td>{{ p.id_in_group}}</td>
+            <td>{{ p.assigned_number }}</td>
+            <td>{{ p.chosen_number }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+    <p>
+        The final group policy is {{ group.group_policy}}. Your assigned number was {{player.assigned_number}}.
+        Your payoff is {{player.payoff}}.
+    </p>
+    {% next_button %}
+{% endblock %}
+
+
