@@ -1,0 +1,4 @@
+group_size,distribution,feedback_view,decision_aggregation
+3,UNIFORM,PERSONALIZED,MEAN
+4,NORMAL,HISTORY,MEDIAN
+5,UNIFORM,ANONYMOUS,MODE

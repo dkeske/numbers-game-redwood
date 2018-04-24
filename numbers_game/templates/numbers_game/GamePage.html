@@ -26,8 +26,6 @@ Numbers Game
 <link rel="import" href="/static/otree-redwood/webcomponents/redwood-channel/redwood-channel.html">
 
 <script>
-    // some fake order we're going to send when the button is clicked
-
     var decisionChan = document.getElementById('decisionChannel');
 
     // send the order out
@@ -46,7 +44,7 @@ Numbers Game
     decisionChan.addEventListener('event', function (event) {
         console.log("From channel start:");
         console.log(event.detail.channel); // "decisions"
-        console.log(event.detail.timestamp); //undefined
+        console.log(event.detail.timestamp); // undefined
         console.log(event.detail.payload); // fakeDecision, above
         console.log("From channel end.");
         var sender_oTree = event.detail.payload.oTree;
@@ -54,6 +52,7 @@ Numbers Game
         var group_policy = event.detail.payload.group_policy;
         console.log("id in group: " + sender_oTree.idInGroup);
         console.log("sender number " + sender_chosen_num);
+
         $('#td_player'+sender_oTree.idInGroup).html(sender_chosen_num);
         $('#td_group_policy').html(group_policy);
     });

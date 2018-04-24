@@ -1,6 +1,6 @@
 from otree.api import Currency as c, currency_range
 from ._builtin import Page, WaitPage
-from .models import Constants
+from .models import Constants, parse_config
 from django.forms import modelformset_factory
 from numpy import mean
 
@@ -19,6 +19,7 @@ class GamePage(Page):
 
     # DecisionFormSet = modelformset_factory(Decision, fields=('chosen_number', 'round_number'), extra=0)
     def vars_for_template(self):
+
         player_ids = [p.id_in_group for p in self.group.get_players()]
         if self.round_number > 1:
             groups_per_round = self.group.in_previous_rounds()
