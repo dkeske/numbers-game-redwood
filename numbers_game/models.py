@@ -77,9 +77,6 @@ class Group(RedwoodGroup):
         print(event.value)
         self.send("decision", event.value)
 
-    def num_rounds(self):
-        return len(parse_config(self.session.config['config_file']))
-
 
 class Constants(BaseConstants):
     name_in_url = 'numbers_game'
@@ -95,8 +92,9 @@ class Constants(BaseConstants):
 
 class Subsession(BaseSubsession):
     def before_session_starts(self):  # called each round
-        if 'config_file' not in self.session.config:
-            self.session.config['config_file'] = 'demo.csv'
+        # Used only for demo version
+        # if 'config_file' not in self.session.config:
+        #     self.session.config['config_file'] = 'demo.csv'
         print("Round number: ", self.round_number)
         if self.round_number > self.get_groups()[0].num_rounds():
             return

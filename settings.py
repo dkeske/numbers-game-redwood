@@ -175,6 +175,7 @@ SESSION_CONFIGS = [
         'num_demo_participants': 3,
         'app_sequence': ['numbers_game'],
         'use_browser_bots': False,
+        'config_file': 'demo.csv',
     },
 
 ]
